@@ -56,6 +56,7 @@ import {
   ASSISTANTS_API_URL,
 } from "../../components/Assistants Api/AssistantsApi";
 import { VAPI_API_URL } from "../../store";
+import CountriesData from "../../countriesData.json";
 
 const Assistants = () => {
   const dispatch = useDispatch();
@@ -70,7 +71,7 @@ const Assistants = () => {
   const [LlmReqDelay, setLlmReqDelay] = useState(1.5);
   const [interruption, setInterruption] = useState(5);
   const [maxDuration, setMaxDuration] = useState(1800);
-  const [maxIdleMessages, setMaxIdleMessages] = useState(3);
+  const [maxIdleMessages, setMaxIdleMessages] = useState(0);
   const [idleTimeout, setIdleTimeout] = useState(7.5);
   const [firstMessage, setFirstMessage] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
@@ -92,6 +93,14 @@ const Assistants = () => {
   const [enableAudioRecording, setEnableAudioRecording] = useState(false);
   const [enableVideoRecording, setEnableVideoRecording] = useState(false);
   const [clientMessages, setClientMessages] = useState([]);
+  const [voicemailMessage, setVoicemailMessage] = useState("");
+  const [endCallMessage, setEndCallMessage] = useState("");
+  const [idleMessages, setIdleMessages] = useState([]);
+  const [summaryPrompt, setSummaryPrompt] = useState("");
+  const [successEvaluationPrompt, setSuccessEvaluationPrompt] = useState("");
+  const [successEvaluationRubric, setSuccessEvaluationRubric] = useState("");
+  const [structuredDataPrompt, setStructuredDataPrompt] = useState("");
+  const [country, setCountry] = useState(null);
 
   const MESSAGES = [
     "conversation-update",
@@ -112,8 +121,30 @@ const Assistants = () => {
 
   const IDLEMESSAGES = [
     "Are you still there?",
-    "IS there anything else you can help with",
-    "Feel free to ask any questions.",
+    "Is there anything else you need help with?",
+    "Feel free to ask me any questions.",
+    "How can I assist you further?",
+    "Let me know if there's anything you need.",
+    "I'm still here if you need assistance.",
+    "I'm ready to help whenever you are.",
+    "Is there something specific that you're looking for?",
+    "I'm here to help with any questions you have.",
+  ];
+
+  const SERVER_MESSAGES = [
+    "conversation-update",
+    "end-of-call-report",
+    "function-call",
+    "hang",
+    "model-output",
+    "phone-call-control",
+    "speech-update",
+    "status-update",
+    "transcript",
+    "tool-calls",
+    "transfer-destination-request",
+    "user-interrupted",
+    "voice-input",
   ];
 
   const providers = [
@@ -157,6 +188,50 @@ const Assistants = () => {
     },
   ];
 
+  const SUCCESS_EVALUATION_RUBRIC = [
+    {
+      rubric: ["NumericScale", "A scale of 1 to 10."],
+    },
+    {
+      rubric: ["DexcriptiveScale", "A scale of Excellent, Good, Fair, Poor."],
+    },
+    {
+      rubric: ["CheckList", "A checklist of criteria and their status."],
+    },
+    {
+      rubric: [
+        "Matrix",
+        "A grid that evaluates multiple criteria accross different performance levels.",
+      ],
+    },
+    {
+      rubric: ["PercentageScale", "A scale of 0% to 100%."],
+    },
+    {
+      rubric: [
+        "LikertScale",
+        "A scale of Strongly Agree, Agree, Neutral, Disagree, Strongly Disagree.",
+      ],
+    },
+    {
+      rubric: [
+        "AutomaticRubric",
+        "Automatically break down evaluation into several criteria, each with its own score.",
+      ],
+    },
+    {
+      rubric: ["PassFail", "A simple 'true' if call passed, 'false' if not."],
+    },
+  ];
+
+  const DATA_SCHEMA_DATATYPES = [
+    "string",
+    "boolean",
+    "number",
+    "object",
+    "array",
+  ];
+
   const transcriberLanguages = ["en", "zh", "de", "es"];
 
   useEffect(() => {
@@ -178,7 +253,6 @@ const Assistants = () => {
         setAssistantId(result[0].id);
       }
     };
-
     fetchAssistants();
   }, [setAssistants]);
 
@@ -230,11 +304,34 @@ const Assistants = () => {
         setInterruption(result.numWordsToInterruptAssistant);
         setMaxDuration(result.maxDurationSeconds);
         setClientMessages(result.clientMessages);
+        setVoicemailMessage(result.voicemailMessage);
+        setEndCallMessage(result.endCallMessage);
+        setIdleMessages(result.messagePlan.idleMessages);
+        setMaxIdleMessages(result.messagePlan.idleMessages.length);
+        setSummaryPrompt(result.analysisPlan.summaryPrompt);
+        setSuccessEvaluationPrompt(result.analysisPlan.successEvaluationPrompt);
+        setSuccessEvaluationRubric(result.analysisPlan.successEvaluationRubric);
+        setStructuredDataPrompt(result.analysisPlan.structuredDataPrompt);
+        if (result.forwardingPhoneNumber) {
+          const rawNumber = result.forwardingPhoneNumber
+            .split("")
+            .reverse()
+            .join("")
+            .slice(10);
+
+          console.log(
+            "Found Dial code is: ",
+            CountriesData.filter(
+              (country) =>
+                country.dial_code === rawNumber.split("").reverse().join("")
+            )
+          );
+        }
       }
     };
 
     getAssistant();
-  }, [assistantId]);
+  }, [assistantId, country]);
 
   useEffect(() => {
     dispatch(setPageTitle({ title: "Assistants" }));
@@ -253,7 +350,6 @@ const Assistants = () => {
     const assistant = assistants.find((assistant) => assistant.id === id);
 
     if (assistant) {
-      // console.log(assistant.id);
       setAssistantId(assistant.id);
     } else {
       console.log("Assistant not found");
@@ -267,7 +363,7 @@ const Assistants = () => {
           <button
             type="button"
             onClick={() => openNotification()}
-            className="w-auto text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            className="w-auto text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8]"
           >
             Create Assistant
             <PlusICon className="w-5 h-5 ml-3" />
@@ -280,11 +376,14 @@ const Assistants = () => {
             data-testid="assistant-menu"
             className="border-r border-border hide-scrollbar sm:h-full w-full sm:max-w-[320px]"
           >
+            <button onClick={() => console.log(CountriesData[0])}>
+              Show Countries in console
+            </button>
             <div className="flex p-4 fixed w-full z-10 sm:w-[320px] sm:border-b sm:border-border bg-foreground/5 backdrop-blur-xl sm:backdrop-blur-sm">
               <button
                 type="button"
                 onClick={() => openNotification()}
-                className="sm:w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                className="sm:w-full text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8]"
               >
                 Create Assistant
                 <PlusICon className="w-5 h-5 ml-3" />
@@ -330,7 +429,7 @@ const Assistants = () => {
                 <button
                   type="button"
                   onClick={() => openNotification()}
-                  className="w-auto text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                  className="w-auto text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8]"
                 >
                   <PhoneICon className="w-5 h-5 mr-3" />
                   Talk with Assistant
@@ -360,7 +459,7 @@ const Assistants = () => {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 mb-3">
-              <div className="group h-auto flex-1 border border-[#27272A] dark:border-gray-200 p-[12px] rounded-2xl transition-all duration-150 ease-in-out bg-gray-200 dark:bg-[#27272A]">
+              <div className="group h-auto flex-1 shadow-md shadow-black/20 p-[12px] rounded-2xl transition-all duration-150 ease-in-out dark:bg-[#1D232A]">
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-col xl:flex-row justify-between items-start gap-2 mb-2  text-base md:text-md lg:text-lg ">
                     <div className="flex items-center gap-2">
@@ -401,7 +500,7 @@ const Assistants = () => {
                   </CProgressStacked>
                 </div>
               </div>
-              <div className="group h-auto flex-1 border border-[#27272A] dark:border-gray-200 p-[12px] rounded-2xl transition-all duration-150 ease-in-out bg-gray-200 dark:bg-[#27272A]">
+              <div className="group h-auto flex-1 shadow-md shadow-black/20 p-[12px] rounded-2xl transition-all duration-150 ease-in-out dark:bg-[#1D232A]">
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-col xl:flex-row justify-between items-start gap-2 mb-2  text-base md:text-md lg:text-lg ">
                     <div className="flex items-center gap-2">
@@ -451,7 +550,7 @@ const Assistants = () => {
               <CNav
                 variant="tabs"
                 role="tablist"
-                className="w-full md:mr-2 flex flex-col items-start justify-center text-muted-foreground overflow-x-auto p-1.5 gap-x-2 bg-background/80 backdrop-blur-lg border border-border rounded-xl shadow-sm shadow-black/20 xl:flex-row xl:w-fit"
+                className="w-full md:mr-2 flex flex-col items-start justify-center text-muted-foreground overflow-x-auto p-1.5 gap-x-2 bg-background/80 backdrop-blur-lg rounded-xl shadow-md shadow-black/20 dark:bg-[#1D232A] xl:flex-row xl:w-fit"
               >
                 <CNavItem>
                   <CNavLink
@@ -547,7 +646,7 @@ const Assistants = () => {
               <div className="flex ">
                 <button
                   type="button"
-                  className="w-auto mr-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-2.5 text-center flex justify-center items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                  className="w-auto mr-2 text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-2.5 text-center flex justify-center items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8]"
                 >
                   <PublishIcon className="w-5 h-5 mr-2" />
                   Publish
@@ -568,7 +667,7 @@ const Assistants = () => {
               </div>
             </div>
             <CTabContent
-              className={`bg-gray-200 dark:bg-[#14171A] p-3 mt-3 rounded-xl w-full ${
+              className={`border-none shadow-md shadow-black/20 dark:bg-[#1D232A] p-3 mt-3 rounded-xl w-full ${
                 activeKey === "model" ? "h-screen sm:h-auto" : "h-auto"
               } border`}
             >
@@ -585,7 +684,7 @@ const Assistants = () => {
                         This section allows you to configure the model for the
                         assistant.
                       </p>
-                      <div className="flex flex-col md:flex-row md:justify-start md:items-center rounded-xl p-3 bg-gray-200 dark:bg-[#1A1C1F] border-[#1A1C1F] dark:border-bg-gray-300 shadow border mt-3">
+                      <div className="flex flex-col md:flex-row md:justify-start md:items-center rounded-xl p-3 bg-gray-200 dark:bg-[#191E24] shadow mt-3">
                         <div className="w-full mr-3">
                           <div>
                             <label className="mb-2 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
@@ -792,7 +891,7 @@ const Assistants = () => {
                         This section allows you to configure the transcription
                         settings for the assistant.
                       </p>
-                      <div className="rounded-xl p-3 bg-gray-200 dark:bg-[#1A1C1F] border-[#1A1C1F] dark:border-bg-gray-300 shadow border mt-3">
+                      <div className="rounded-xl p-3 bg-gray-200 dark:bg-[#191E24] border-[#1A1C1F] dark:border-bg-gray-300 shadow border mt-3">
                         <div className="grid grid-cols-2 gap-2 my-3">
                           <div>
                             <label className="mb-1 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
@@ -963,7 +1062,7 @@ const Assistants = () => {
                         dropdown. If you are still facing any error, you can
                         enable custom voice and add a voice ID manually.
                       </p>
-                      <div className="rounded-xl p-3 border bg-gray-200 dark:bg-[#1A1C1F] border-[#1A1C1F] dark:border-bg-gray-300 shadow mt-3">
+                      <div className="rounded-xl p-3 border bg-gray-200 dark:bg-[#191E24] border-[#1A1C1F] dark:border-bg-gray-300 shadow mt-3">
                         <div className="grid grid-cols-2 gap-2 my-3">
                           <div>
                             <label className="mb-1 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
@@ -1010,7 +1109,7 @@ const Assistants = () => {
                         Configure additional settings for the voice of your
                         assistant.
                       </p>
-                      <div className="rounded-xl p-3 border bg-gray-200 dark:bg-[#1A1C1F] border-[#1A1C1F] dark:border-bg-gray-300 shadow mt-3">
+                      <div className="rounded-xl p-3 bg-gray-200 dark:bg-[#191E24] shadow mt-3">
                         <div className="grid grid-cols-2 gap-2 my-3">
                           <div>
                             <label className="mb-1 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
@@ -1049,7 +1148,6 @@ const Assistants = () => {
                             />
                           </div>
                         </div>
-                        <hr />
                         <div className="mt-2">
                           <label className="mb-1 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                             Punctuation Boundaries
@@ -1069,7 +1167,6 @@ const Assistants = () => {
                             </option>
                           </CFormSelect>
                         </div>
-                        <hr />
                         <div className=" flex justify-between items-center py-3">
                           <div className="flex justify-start items-center">
                             <BiInjection className="w-7 h-7 mr-3" />
@@ -1093,7 +1190,6 @@ const Assistants = () => {
                             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                           </label>
                         </div>
-                        <hr />
                         <div className=" flex justify-between items-center py-3">
                           <div className="flex justify-start items-center">
                             <ChatIcon className="w-7 h-7 mr-3" />
@@ -1117,7 +1213,6 @@ const Assistants = () => {
                             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                           </label>
                         </div>
-                        <hr />
                         <div className=" flex justify-between items-center py-3">
                           <div className="flex justify-start items-center">
                             <SpeakerIcon className="w-7 h-7 mr-3" />
@@ -1189,7 +1284,7 @@ const Assistants = () => {
                         We've pre-built functions for common use cases. You can
                         enable them and configure them below.
                       </p>
-                      <div className="rounded-xl p-3 border bg-gray-200 dark:bg-[#1A1C1F] border-[#1A1C1F] dark:border-bg-gray-300 shadow mt-3">
+                      <div className="rounded-xl p-3 border bg-gray-200 dark:bg-[#191E24] border-[#1A1C1F] dark:border-bg-gray-300 shadow mt-3">
                         <div className=" flex justify-between items-center py-3">
                           <div className="flex justify-start items-center">
                             <PhoneXIcon className="w-7 h-7 mr-3" />
@@ -1216,7 +1311,6 @@ const Assistants = () => {
                             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                           </label>
                         </div>
-                        <hr />
                         <div className=" flex justify-between items-center py-3">
                           <div className="flex justify-start items-center">
                             <BiDialpad className="w-7 h-7 mr-3" />
@@ -1242,23 +1336,32 @@ const Assistants = () => {
                             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                           </label>
                         </div>
-                        <hr />
                         <div className="mt-2">
                           <label className="mb-1 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                             Forwarding Phone Number
                           </label>
-                          <div className="flex">
-                            <CFormSelect className="text-sm rounded-l-lg block w-auto p-2.5 mb-2">
-                              <option>Select Country</option>
-                              <option value="1">One</option>
-                              <option value="2">Two</option>
-                              <option value="3" disabled>
-                                Three
-                              </option>
+                          <div className="grid grid-cols-2">
+                            <CFormSelect
+                              className="text-sm rounded-l-lg block w-auto p-2.5 mb-2"
+                              onChange={(e) => {
+                                const number =
+                                  document.querySelector(".forwadingNumber");
+                                number.value = null;
+                              }}
+                            >
+                              {CountriesData.map((country, index) => {
+                                return (
+                                  <>
+                                    <option key={index} value={country.name}>
+                                      {country.name} {country.dial_code}
+                                    </option>
+                                  </>
+                                );
+                              })}
                             </CFormSelect>
                             <input
                               type="tel"
-                              className="text-sm rounded-r-lg block w-full p-2.5 mb-2"
+                              className="forwadingNumber text-sm rounded-r-lg block w-full p-2.5 mb-2"
                               value={forwadingNumber}
                               onChange={(e) =>
                                 setForwadingNumber(e.target.value)
@@ -1266,7 +1369,6 @@ const Assistants = () => {
                             />
                           </div>
                         </div>
-                        <hr />
                         <div className="py-3">
                           <label className="mb-2 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center capitalize">
                             end call phrases{" "}
@@ -1290,7 +1392,6 @@ const Assistants = () => {
                             }
                           />
                         </div>
-                        <hr />
                       </div>
                     </CCardBody>
                   </CCard>
@@ -1339,7 +1440,7 @@ const Assistants = () => {
                         This section allows you to configure the privacy
                         settings for the assistant.
                       </p>
-                      <div className="rounded-xl p-3 border bg-gray-200 dark:bg-[#1A1C1F] border-[#1A1C1F] dark:border-bg-gray-300 shadow mt-3">
+                      <div className="rounded-xl p-3 border bg-gray-200 dark:bg-[#191E24] border-[#1A1C1F] dark:border-bg-gray-300 shadow mt-3">
                         <div className=" flex justify-between items-center py-3">
                           <div className="flex justify-start items-center">
                             <LockIcon className="w-7 h-7 mr-3" />
@@ -1370,7 +1471,6 @@ const Assistants = () => {
                             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                           </label>
                         </div>
-                        <hr />
                         <div
                           className={`flex justify-between items-center py-3 ${
                             enableHIPAA ? "cursor-not-allowed" : ""
@@ -1404,7 +1504,6 @@ const Assistants = () => {
                             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                           </label>
                         </div>
-                        <hr />
                         <div
                           className={`flex justify-between items-center py-3 ${
                             enableHIPAA ? "cursor-not-allowed" : ""
@@ -1446,7 +1545,6 @@ const Assistants = () => {
                             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                           </label>
                         </div>
-                        <hr />
                       </div>
                     </CCardBody>
                   </CCard>
@@ -1457,7 +1555,7 @@ const Assistants = () => {
                         This section allows you to configure the pipeline
                         settings for the assistant.
                       </p>
-                      <div className="rounded-xl p-3 border bg-gray-200 dark:bg-[#1A1C1F] border-[#1A1C1F] dark:border-bg-gray-300 shadow mt-3">
+                      <div className="rounded-xl p-3 border bg-gray-200 dark:bg-[#191E24] border-[#1A1C1F] dark:border-bg-gray-300 shadow mt-3">
                         <div className=" flex justify-between items-center py-3">
                           <div className="flex justify-start items-center">
                             <GiSandsOfTime className="w-7 h-6 mr-3" />
@@ -1488,7 +1586,6 @@ const Assistants = () => {
                             </div>
                           </div>
                         </div>
-                        <hr />
                         <div className=" flex justify-between items-center py-3">
                           <div className="flex justify-start items-center">
                             <LuTimerReset className="w-7 h-6 mr-3" />
@@ -1518,7 +1615,6 @@ const Assistants = () => {
                             </div>
                           </div>
                         </div>
-                        <hr />
                         <div className=" flex justify-between items-center py-3">
                           <div className="flex justify-start items-center">
                             <BiWifiOff className="w-7 h-6 mr-3" />
@@ -1547,7 +1643,6 @@ const Assistants = () => {
                             </div>
                           </div>
                         </div>
-                        <hr />
                         <div className=" flex justify-between items-center py-3">
                           <div className="flex justify-start items-center">
                             <TbRulerMeasure className="w-7 h-6 mr-3" />
@@ -1576,7 +1671,6 @@ const Assistants = () => {
                             </div>
                           </div>
                         </div>
-                        <hr />
                         <div className=" flex justify-between items-center py-3">
                           <div className="flex justify-start items-center">
                             <IoTimerOutline className="w-7 h-6 mr-3" />
@@ -1604,7 +1698,6 @@ const Assistants = () => {
                             </div>
                           </div>
                         </div>
-                        <hr />
                       </div>
                     </CCardBody>
                   </CCard>
@@ -1615,7 +1708,7 @@ const Assistants = () => {
                         Message configuration for messages that are sent to and
                         from the assistant.
                       </p>
-                      <div className="rounded-xl p-3 border bg-gray-200 dark:bg-[#1A1C1F] border-[#1A1C1F] dark:border-bg-gray-300 shadow mt-3">
+                      <div className="rounded-xl p-3 border bg-gray-200 dark:bg-[#191E24] border-[#1A1C1F] dark:border-bg-gray-300 shadow mt-3">
                         <div>
                           <label className="text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                             Server Url
@@ -1631,7 +1724,6 @@ const Assistants = () => {
                             placeholder="Endpoint URL to handle Server messages"
                           />
                         </div>
-                        <hr />
                         <div className="mt-3">
                           <label className="text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                             Client Messages
@@ -1643,18 +1735,33 @@ const Assistants = () => {
                           <Multiselect
                             isObject={false}
                             onRemove={(event) => {
+                              setClientMessages(
+                                clientMessages.filter(
+                                  (clientMessage) => clientMessage !== event
+                                )
+                              );
                               console.log(event);
                             }}
                             onSelect={(event) => {
+                              setClientMessages(event);
                               console.log(event);
                             }}
+                            selectedValues={MESSAGES.filter((message) => {
+                              if (
+                                clientMessages.find(
+                                  (clientMessage) => clientMessage === message
+                                )
+                              ) {
+                                return message;
+                              }
+                              return false;
+                            })}
                             options={MESSAGES}
                             showCheckbox={true}
                             placeholder="Select Client Messages"
                             className="text-sm rounded-lg block w-full my-2 bg-white dark:bg-black border-none"
                           />
                         </div>
-                        <hr />
                         <div className="mt-3">
                           <label className="text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                             Server Messages
@@ -1676,7 +1783,6 @@ const Assistants = () => {
                             className="text-sm rounded-lg block w-full my-2 bg-white dark:bg-black border-none"
                           />
                         </div>
-                        <hr />
                         <div className="my-2">
                           <label className="text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                             Voicemail Message
@@ -1688,9 +1794,12 @@ const Assistants = () => {
                           <CFormInput
                             className="text-sm rounded-lg block w-full p-2.5 mt-2"
                             placeholder="Hey, can you please callback? Thanks!"
+                            value={voicemailMessage}
+                            onChange={(e) =>
+                              setVoicemailMessage(e.target.value)
+                            }
                           />
                         </div>
-                        <hr />
                         <div className="my-2">
                           <label className="text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                             End Call Message
@@ -1702,9 +1811,10 @@ const Assistants = () => {
                           <CFormInput
                             className="text-sm rounded-lg block w-full p-2.5 mt-2"
                             placeholder="Goodbye!"
+                            value={endCallMessage}
+                            onChange={(e) => setEndCallMessage(e.target.value)}
                           />
                         </div>
-                        <hr />
                         <div className="my-2">
                           <label className="text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                             Idle Messages
@@ -1716,14 +1826,30 @@ const Assistants = () => {
                           <Multiselect
                             isObject={false}
                             onRemove={(event) => {
+                              setIdleMessages(
+                                idleMessages.filter(
+                                  (idleMessage) => idleMessage !== event
+                                )
+                              );
                               console.log(event);
                             }}
                             onSelect={(event) => {
+                              setIdleMessages(event);
                               console.log(event);
                             }}
+                            selectedValues={IDLEMESSAGES.filter((message) => {
+                              if (
+                                idleMessages.find(
+                                  (idleMessage) => idleMessage === message
+                                )
+                              ) {
+                                return message;
+                              }
+                              return false;
+                            })}
                             options={IDLEMESSAGES}
                             placeholder="Select Idle Messages"
-                            className="text-sm rounded-lg block w-full my-2 bg-white dark:bg-black border-none"
+                            className="text-sm rounded-lg block w-full my-2 bg-white dark:bg-black"
                           />
                         </div>
                         <div className=" flex justify-between items-center py-3">
@@ -1745,7 +1871,7 @@ const Assistants = () => {
                               max={10}
                               step={1}
                               value={maxIdleMessages}
-                              defaultValue={maxIdleMessages}
+                              defaultValue={3}
                               onChange={(e) =>
                                 setMaxIdleMessages(e.target.value)
                               }
@@ -1756,7 +1882,6 @@ const Assistants = () => {
                             </div>
                           </div>
                         </div>
-                        <hr />
                         <div className=" flex justify-between items-center py-3">
                           <div className="flex justify-start items-center">
                             <GiSandsOfTime className="w-7 h-6 mr-3" />
@@ -1804,7 +1929,7 @@ const Assistants = () => {
                         The output is stored in call.analysis.summary. You can
                         also find the summary in the Call Logs Page.
                       </p>
-                      <div className="rounded-xl p-3 bg-gray-200 dark:bg-[#1A1C1F] border-[#1A1C1F] dark:border-bg-gray-300 shadow border mt-3">
+                      <div className="rounded-xl p-3 bg-gray-200 dark:bg-[#191E24] border-[#1A1C1F] dark:border-bg-gray-300 shadow border mt-3">
                         <div className="flex justify-start items-center">
                           <div className="w-full">
                             <div>
@@ -1815,6 +1940,10 @@ const Assistants = () => {
                                 rows="6"
                                 className="text-sm rounded-lg block w-full p-2.5"
                                 placeholder="You are an expert note taker. You will be given a transcript of a call. Summarize the call in 2-3 sentences, if applicable."
+                                value={summaryPrompt}
+                                onChange={(e) =>
+                                  setSummaryPrompt(e.target.value)
+                                }
                               ></textarea>
                             </div>
                           </div>
@@ -1831,7 +1960,7 @@ const Assistants = () => {
                         Prompt. If both are provided, they are concatenated into
                         appropriate instructions.
                       </p>
-                      <div className="rounded-xl p-3 bg-gray-200 dark:bg-[#1A1C1F] border-[#1A1C1F] dark:border-bg-gray-300 shadow border mt-3">
+                      <div className="rounded-xl p-3 bg-gray-200 dark:bg-[#191E24] border-[#1A1C1F] dark:border-bg-gray-300 shadow border mt-3">
                         <div className="flex justify-start items-center">
                           <div className="w-full">
                             <div>
@@ -1846,9 +1975,12 @@ const Assistants = () => {
                                 rows="6"
                                 className="text-sm rounded-lg block w-full p-2.5"
                                 placeholder="You are an expert note taker. You will be given a transcript of a call and the system prompt of the AI participant. Determine if the call was successful based on the objectives inferred from the system prompt"
+                                value={successEvaluationPrompt}
+                                onChange={(e) =>
+                                  setSuccessEvaluationPrompt(e.target.value)
+                                }
                               ></textarea>
                             </div>
-                            <hr />
                             <div className="mt-3">
                               <label className="text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                                 Success Evaluation Rubric
@@ -1858,17 +1990,38 @@ const Assistants = () => {
                                 the Success Evaluation.
                               </div>
                               <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2">
-                                <option>
-                                  Select Success Evaluation Rubric
-                                </option>
-                                <option value="1">
-                                  Descriptive Sale | A sale of excellent, good,
-                                  fair, poor.
-                                </option>
-                                <option value="2">
-                                  Checklist | A checklist of criteria and their
-                                  status.
-                                </option>
+                                {SUCCESS_EVALUATION_RUBRIC.map(
+                                  (evaluationRubric, index) => {
+                                    if (
+                                      evaluationRubric.rubric[0] ===
+                                      successEvaluationRubric
+                                    ) {
+                                      return (
+                                        <>
+                                          <option
+                                            key={index}
+                                            value={evaluationRubric.rubric[0]}
+                                            selected
+                                          >
+                                            {evaluationRubric.rubric[0]} |{" "}
+                                            {evaluationRubric.rubric[1]}
+                                          </option>
+                                        </>
+                                      );
+                                    }
+                                    return (
+                                      <>
+                                        <option
+                                          key={index}
+                                          value={evaluationRubric.rubric[0]}
+                                        >
+                                          {evaluationRubric.rubric[0]} |{" "}
+                                          {evaluationRubric.rubric[1]}
+                                        </option>
+                                      </>
+                                    );
+                                  }
+                                )}
                               </CFormSelect>
                             </div>
                           </div>
@@ -1885,7 +2038,7 @@ const Assistants = () => {
                         Structured Data Prompt. If both are provided, they are
                         concatenated into appropriate instructions.
                       </p>
-                      <div className="rounded-xl p-3 bg-gray-200 dark:bg-[#1A1C1F] border-[#1A1C1F] dark:border-bg-gray-300 shadow border mt-3">
+                      <div className="rounded-xl p-3 bg-gray-200 dark:bg-[#191E24] border-[#1A1C1F] dark:border-bg-gray-300 shadow border mt-3">
                         <div className="flex justify-start items-center">
                           <div className="w-full">
                             <div>
@@ -1900,28 +2053,45 @@ const Assistants = () => {
                                 rows="6"
                                 className="text-sm rounded-lg block w-full p-2.5"
                                 placeholder="You will be given a transcript of a call and the system prompt of the AI participant. Extract.."
+                                value={structuredDataPrompt}
+                                onChange={(e) =>
+                                  setStructuredDataPrompt(e.target.value)
+                                }
                               ></textarea>
                             </div>
-                            <hr />
-                            {/* <div className="mt-3">
+                            <div className="mt-3">
                               <label className="text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
-                                Data Scheme
+                                Data Schema
                               </label>
                               <div className="text-xs mb-1">
-                              This defines the structure of the data to be extracted. Add various properties you want in the Structured Data Output.
+                                This defines the structure of the data to be
+                                extracted. Add various properties you want in
+                                the Structured Data Output.
                               </div>
-                              <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2">
-                                <option>
-                                  Select Success Evaluation Rubric
-                                </option>
-                                <option value="1">
-                                Descriptive Sale | A sale of excellent, good, fair, poor.
-                                </option>
-                                <option value="2">
-                                Checklist | A checklist of criteria and their status.
-                                </option>
-                              </CFormSelect>
-                            </div> */}
+                              <div className="w-full grid grid-cols-2">
+                                <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2">
+                                  {DATA_SCHEMA_DATATYPES.map(
+                                    (datatype, index) => {
+                                      return (
+                                        <>
+                                          <option key={index} value={datatype}>
+                                            {datatype}
+                                          </option>
+                                        </>
+                                      );
+                                    }
+                                  )}
+                                </CFormSelect>
+                                <div className="w-full mb-2 flex justify-end gap-2">
+                                  <button className="text-sm font-semibold rounded-lg p-2.5 border border-red-500 bg-red-500 text-white hover:bg-transparent hover:text-red-500">
+                                    Delete
+                                  </button>
+                                  <button className="text-sm font-semibold rounded-lg p-2.5 border border-green-500 bg-green-500 text-white hover:bg-transparent hover:text-green-500">
+                                    Save
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>

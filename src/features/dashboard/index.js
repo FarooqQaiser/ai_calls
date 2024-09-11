@@ -521,52 +521,53 @@ function Dashboard() {
       </div> */}
 
       {/** ---------------------- User source channels table  ------------------------- */}
-      <div className="grid lg:grid-cols-3 mt-4 grid-cols-1 gap-6 mb-0">
-        <div className="flex justify-start items-center col-span-2 mb-0">
-          <MdOutlinePhoneInTalk className="w-9 h-9 mr-3" />
-          <div className="flex flex-col">
-            <p className="text-lg font-bold mt-0">Call Analysis</p>
-            <p className="text-xs mt-0 mb-4">
-              Here you can get a quick overview of how your calls are going
-              within organization.
-            </p>
+      <div className="dark:bg-[#14171A] bg-[#F2F2F2] p-5 mt-8 rounded-3xl">
+        <div className="grid lg:grid-cols-3  grid-cols-1 gap-6 mb-0 ">
+          <div className="flex justify-start items-center col-span-2 mb-0">
+            <MdOutlinePhoneInTalk className="w-9 h-9 mr-3" />
+            <div className="flex flex-col">
+              <p className="text-lg font-bold mt-0">Call Analysis</p>
+              <p className="text-xs mt-0 mb-4">
+                Here you can get a quick overview of how your calls are going
+                within organization.
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-start items-center mb-0 ">
+            <FaUsersBetweenLines className="w-9 h-9 mr-3 -mt-2" />
+            <div className="flex flex-col">
+              <p className="text-lg font-bold mt-0">Assistants Table</p>
+              <p className="text-xs mt-0 mb-4">
+                Total and average call duration aggregated by assistants.
+              </p>
+            </div>
           </div>
         </div>
-        <div className="flex justify-start items-center mb-0">
-          <FaUsersBetweenLines className="w-9 h-9 mr-3 -mt-2" />
-          <div className="flex flex-col">
-            <p className="text-lg font-bold mt-0">Assistants Table</p>
-            <p className="text-xs mt-0 mb-4">
-              Total and average call duration aggregated by assistants.
-            </p>
+        <div className="grid lg:grid-cols-3 grid-cols-1 gap-6 ">
+          <div className="grid lg:grid-cols-2 grid-cols-1 gap-6 col-span-2 ">
+            <TitleCard topMargin="mt-0 ">
+              <p className="text-lg font-bold mt-0">Call Ended Reason</p>
+              <p className="text-xs mt-0 mb-4 ">
+                Call aggregated by the reason of why the call ended.
+              </p>
+              {/* <Doughnut options={options} data={reasonData} /> */}
+            </TitleCard>
+            <TitleCard topMargin="mt-0">
+              <p className="text-lg font-bold mt-0">
+                Average Call Duration By Assistance
+              </p>
+              <p className="text-xs mt-0 mb-4">
+                Average call duration by assistance in minutes.
+              </p>
+              <Doughnut options={options} data={averageCallData} />
+            </TitleCard>
           </div>
+          <UserChannels data={assistants} names={assistantsName} />
         </div>
       </div>
-      <div className="grid lg:grid-cols-3 grid-cols-1 gap-6">
-        <div className="grid lg:grid-cols-2 grid-cols-1 gap-6 col-span-2">
-          <TitleCard topMargin="mt-0">
-            <p className="text-lg font-bold mt-0">Call Ended Reason</p>
-            <p className="text-xs mt-0 mb-4">
-              Call aggregated by the reason of why the call ended.
-            </p>
-            <Doughnut options={options} data={reasonData} />
-          </TitleCard>
-          <TitleCard topMargin="mt-0">
-            <p className="text-lg font-bold mt-0">
-              Average Call Duration By Assistance
-            </p>
-            <p className="text-xs mt-0 mb-4">
-              Average call duration by assistance in minutes.
-            </p>
-            <Doughnut options={options} data={averageCallData} />
-          </TitleCard>
-        </div>
-        <UserChannels data={assistants} names={assistantsName} />
-      </div>
-
       {/** ---------------------- Different stats content 2 ------------------------- */}
 
-      <div className="grid lg:grid-cols-2 mt-10 grid-cols-1 gap-6">
+      <div className="grid lg:grid-cols-1 mt-10 grid-cols-1 gap-6">
         {/* <AmountStats/> */}
         <DashboardStats
           title="Cost per Provider"

@@ -12,8 +12,8 @@ function DashboardStats({ title, Icon, value, description, colorIndex }) {
   const innerHtml = { __html: Icon };
 
   return (
-    <div className="stats shadow">
-      <div className="stat">
+    <div className="stats shadow bg-white dark:bg-[#14171A] ">
+      <div className="stat ">
         <div
           className={`stat-figure dark:text-slate-300 text-${
             COLORS[colorIndex % 2]
