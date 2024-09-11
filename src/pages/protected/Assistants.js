@@ -319,8 +319,7 @@ const Assistants = () => {
             .join("")
             .slice(10);
 
-          console.log(
-            "Found Dial code is: ",
+          setCountry(
             CountriesData.filter(
               (country) =>
                 country.dial_code === rawNumber.split("").reverse().join("")
@@ -331,7 +330,8 @@ const Assistants = () => {
     };
 
     getAssistant();
-  }, [assistantId, country]);
+  }, [assistantId]);
+  console.log("Found Dial code is: ", country);
 
   useEffect(() => {
     dispatch(setPageTitle({ title: "Assistants" }));
@@ -1349,11 +1349,30 @@ const Assistants = () => {
                                 number.value = null;
                               }}
                             >
-                              {CountriesData.map((country, index) => {
+                              {CountriesData.map((countryData, index) => {
+                                if (
+                                  countryData.dial_code === country.dial_code
+                                ) {
+                                  return (
+                                    <>
+                                      <option
+                                        key={index}
+                                        value={countryData.name}
+                                        selected
+                                      >
+                                        {countryData.name}{" "}
+                                        {countryData.dial_code}
+                                      </option>
+                                    </>
+                                  );
+                                }
                                 return (
                                   <>
-                                    <option key={index} value={country.name}>
-                                      {country.name} {country.dial_code}
+                                    <option
+                                      key={index}
+                                      value={countryData.name}
+                                    >
+                                      {countryData.name} {countryData.dial_code}
                                     </option>
                                   </>
                                 );
