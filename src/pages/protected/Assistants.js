@@ -55,24 +55,43 @@ import {
   ASSISTANTS_API_OPTIONS,
   ASSISTANTS_API_URL,
 } from "../../components/Assistants Api/AssistantsApi";
+import { VAPI_API_URL } from "../../store";
+
 const Assistants = () => {
   const dispatch = useDispatch();
   const [noAssistant, setNoAssistant] = useState(true);
-  const [currentAssistant, setCurrentAssistant] = useState({
-    id: "1",
-    name: "first assistant",
-  });
+  const [currentAssistant, setCurrentAssistant] = useState("");
   const [assistantId, setAssistantId] = useState(0);
   const [assistants, setAssistants] = useState([]);
   const [activeKey, setActiveKey] = useState("model");
-  const [temperature, setTemperature] = useState(1.2);
-  const [silenceTimeout, setSilenceTimeout] = useState(260);
-  const [responseDelay, setResponseDelay] = useState(0.9);
+  const [temperature, setTemperature] = useState(0);
+  const [silenceTimeout, setSilenceTimeout] = useState(0);
+  const [responseDelay, setResponseDelay] = useState(0);
   const [LlmReqDelay, setLlmReqDelay] = useState(1.5);
   const [interruption, setInterruption] = useState(5);
   const [maxDuration, setMaxDuration] = useState(1800);
   const [maxIdleMessages, setMaxIdleMessages] = useState(3);
   const [idleTimeout, setIdleTimeout] = useState(7.5);
+  const [firstMessage, setFirstMessage] = useState("");
+  const [systemPrompt, setSystemPrompt] = useState("");
+  const [modelProvider, setModelProvider] = useState("");
+  const [aiModel, setAIModel] = useState("");
+  const [emotionRecognitionEnabled, setEmotionRecognitionEnabled] =
+    useState(false);
+  const [assistantTranscriberProvider, setAssistantTranscriberProvider] =
+    useState("deepgram");
+  const [assistantTranscriberLanguage, setAssistantTranscriberLanguage] =
+    useState("en");
+  const [assistantTranscriberModel, setAssistantTranscriberModel] =
+    useState("nova-2");
+  const [enableEndCallFunction, setEnableEndCallFunction] = useState(false);
+  const [enableDialKeypad, setEnableDialKeypad] = useState(false);
+  const [endCallPhrases, setEndCallPhrases] = useState([]);
+  const [forwadingNumber, setForwadingNumber] = useState(0);
+  const [enableHIPAA, setEnableHIPAA] = useState(false);
+  const [enableAudioRecording, setEnableAudioRecording] = useState(false);
+  const [enableVideoRecording, setEnableVideoRecording] = useState(false);
+  const [clientMessages, setClientMessages] = useState([]);
 
   const MESSAGES = [
     "conversation-update",
@@ -88,6 +107,7 @@ const Assistants = () => {
     "transfer-destination-request",
     "user-interrupted",
     "voice-input",
+    "metadata",
   ];
 
   const IDLEMESSAGES = [
@@ -109,23 +129,18 @@ const Assistants = () => {
     "custom-llm",
   ];
 
-  const models = [
-    "GPT 4o Cluster",
-    "GPT 4o Mini Cluster",
-    "GPT 3.5 Turbo Cluster",
-    "GPT 4 Turbo Cluster",
-  ];
+  const models = ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo", "gpt-4"];
 
-  const transcriberProvider = ["deepgram", "talkscriber", "gladia"];
+  const transcriberProvider = ["none", "deepgram", "talkscriber", "gladia"];
 
   const transcriberModel = [
     {
-      model: ["Fast", "Accurate"],
+      model: ["fast", "accurate"],
     },
     {
       model: [
-        "Nova 2",
-        "Nova 2 General",
+        "nova-2",
+        "nova-2-general",
         "Nova 2 Meeting",
         "Nova 2 Phonecall",
         "Nova 2 Finance",
@@ -138,27 +153,29 @@ const Assistants = () => {
       ],
     },
     {
-      model: ["Whisper"],
+      model: ["whisper"],
     },
   ];
+
+  const transcriberLanguages = ["en", "zh", "de", "es"];
 
   useEffect(() => {
     let result = null;
     const fetchAssistants = async () => {
-      const response = await fetch(ASSISTANTS_API_URL, ASSISTANTS_API_OPTIONS);
-      result = await response.json();
-      console.log(result);
+      try {
+        const response = await fetch(
+          ASSISTANTS_API_URL,
+          ASSISTANTS_API_OPTIONS
+        );
+        result = await response.json();
+        console.log(result);
+      } catch (err) {
+        console.error(err);
+      }
 
       if (result) {
         setAssistants(result);
-        setNoAssistant(false);
-        const assistant = result.filter((assistant, index) => {
-          if (index === 0) {
-            return assistant;
-          }
-          return null;
-        });
-        setCurrentAssistant(assistant[0]);
+        setAssistantId(result[0].id);
       }
     };
 
@@ -166,14 +183,62 @@ const Assistants = () => {
   }, [setAssistants]);
 
   useEffect(() => {
+    let result = null;
+
+    const getAssistant = async () => {
+      try {
+        const response = await fetch(
+          `${VAPI_API_URL}assistant/${assistantId}`,
+          {
+            method: "GET",
+            headers: { Authorization: "e39adb17-33cb-472b-87c2-97f7ee91139f" },
+          }
+        );
+        result = await response.json();
+        console.log("Assitant: ", result);
+      } catch (err) {
+        console.error(err);
+      }
+
+      if (result) {
+        setNoAssistant(false);
+        setCurrentAssistant(result);
+        setTemperature(result.model.temperature);
+        setFirstMessage(result.firstMessage);
+        setSystemPrompt(result.model.messages[0].content);
+        setModelProvider(result.model.provider);
+        setAIModel(result.model.model);
+        setEmotionRecognitionEnabled(result.model.emotionRecognitionEnabled);
+        setAssistantTranscriberProvider(result.transcriber.provider);
+        setAssistantTranscriberLanguage(result.transcriber.language);
+        setAssistantTranscriberModel(result.transcriber.model);
+        setEnableEndCallFunction(result.endCallFunctionEnabled);
+        setEnableDialKeypad(result.dialKeypadFunctionEnabled);
+        setEndCallPhrases(result.endCallPhrases);
+        setForwadingNumber(result.forwardingPhoneNumber);
+        setEnableHIPAA(result.hipaaEnabled);
+        if (result.hipaaEnabled) {
+          setEnableAudioRecording(false);
+          setEnableVideoRecording(false);
+        } else {
+          setEnableAudioRecording(result.recordingEnabled);
+          setEnableVideoRecording(result.artifactPlan.videoRecordingEnabled);
+        }
+        setSilenceTimeout(result.silenceTimeoutSeconds);
+        setResponseDelay(result.responseDelaySeconds);
+        setLlmReqDelay(result.llmRequestDelaySeconds);
+        setInterruption(result.numWordsToInterruptAssistant);
+        setMaxDuration(result.maxDurationSeconds);
+        setClientMessages(result.clientMessages);
+      }
+    };
+
+    getAssistant();
+  }, [assistantId]);
+
+  useEffect(() => {
     dispatch(setPageTitle({ title: "Assistants" }));
   }, [dispatch]);
-
-  // useEffect(() => {
-  //   setCurrentAssistant(
-  //     assistants.filter((assit) => assit.id === assistantId)[0]
-  //   );
-  // }, [assistantId, assistants]);
 
   const openNotification = () => {
     dispatch(
@@ -185,13 +250,14 @@ const Assistants = () => {
   };
 
   const handleCurrentAssistant = (id) => {
-    const assistant = assistants.filter((assistant) => {
-      if (assistant.id === id) {
-        return assistant;
-      }
-      return null;
-    });
-    setCurrentAssistant(assistant[0]);
+    const assistant = assistants.find((assistant) => assistant.id === id);
+
+    if (assistant) {
+      // console.log(assistant.id);
+      setAssistantId(assistant.id);
+    } else {
+      console.log("Assistant not found");
+    }
   };
 
   return (
@@ -234,9 +300,9 @@ const Assistants = () => {
                 assistants.map((assistant, index) => (
                   <div
                     key={index}
-                    className={`group flex flex-col p-2 rounded-lg w-full border border-transparent hover:bg-[#2B3039] cursor-pointer transition-all duration-150 ease-in-out ${
+                    className={`group flex flex-col p-2 rounded-lg w-full border border-transparent dark:hover:bg-[#2B3039] hover:bg-[#E8E9EB] cursor-pointer transition-all duration-150 ease-in-out ${
                       currentAssistant.name === assistant.name
-                        ? "bg-[#1D232A]"
+                        ? "dark:bg-[#1D232A] bg-[#FFFFFF]"
                         : ""
                     }`}
                     onClick={() => handleCurrentAssistant(assistant.id)} //() => setAssistantId(assistant.id)
@@ -538,10 +604,8 @@ const Assistants = () => {
                               className="text-sm rounded-lg block w-full p-2.5"
                               placeholder=""
                               required
-                              value={currentAssistant.firstMessage}
-                              onChange={(e) => {
-                                currentAssistant.firstMessage = e.target.value;
-                              }}
+                              value={firstMessage}
+                              onChange={(e) => setFirstMessage(e.target.value)}
                             />
                           </div>
                           <div>
@@ -563,11 +627,8 @@ const Assistants = () => {
                               rows="10"
                               className="text-sm rounded-lg block w-full p-2.5"
                               placeholder="Add your prompt here..."
-                              value={currentAssistant.model.messages[0].content}
-                              onChange={(e) => {
-                                currentAssistant.model.messages[0].content =
-                                  e.target.value;
-                              }}
+                              value={systemPrompt}
+                              onChange={(e) => setSystemPrompt(e.target.value)}
                             ></textarea>
                           </div>
                         </div>
@@ -578,9 +639,7 @@ const Assistants = () => {
                             </label>
                             <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer">
                               {providers.map((provider, index) => {
-                                if (
-                                  currentAssistant.model.provider === provider
-                                ) {
+                                if (modelProvider === provider) {
                                   return (
                                     <>
                                       <option
@@ -616,7 +675,7 @@ const Assistants = () => {
                             </label>
                             <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer">
                               {models.map((model, index) => {
-                                if (currentAssistant.model.model === model) {
+                                if (aiModel === model) {
                                   return (
                                     <>
                                       <option
@@ -665,20 +724,16 @@ const Assistants = () => {
                                 </CTooltip>
                               </label>
                               <span className="text-sm rounded-lg block p-2.5">
-                                {currentAssistant.model.temperature}
+                                {temperature}
                               </span>
                             </div>
                             <CFormRange
-                              min={1}
+                              min={0}
                               max={2}
                               step={0.1}
-                              value={currentAssistant.model.temperature}
-                              defaultValue={temperature}
-                              onChange={(e) => {
-                                currentAssistant.model.temperature =
-                                  e.target.value;
-                              }}
-                              className="w-full h-1"
+                              value={temperature}
+                              onChange={(e) => setTemperature(e.target.value)}
+                              className="w-full h-1 cursor-pointer"
                             />
                           </div>
                           <div>
@@ -710,13 +765,10 @@ const Assistants = () => {
                             </span>
                             <input
                               type="checkbox"
-                              checked={
-                                currentAssistant.model.emotionRecognitionEnabled
+                              checked={emotionRecognitionEnabled}
+                              onChange={(e) =>
+                                setEmotionRecognitionEnabled(e.target.checked)
                               }
-                              onChange={(e) => {
-                                currentAssistant.model.emotionRecognitionEnabled =
-                                  e.target.checked;
-                              }}
                               className="sr-only peer"
                             />
                             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
@@ -747,24 +799,24 @@ const Assistants = () => {
                               Provider
                             </label>
                             <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2">
-                              {transcriberProvider.map((transcriber, index) => {
-                                if (currentAssistant.transcriber.provider) {
+                              {transcriberProvider.map((provider, index) => {
+                                if (assistantTranscriberProvider === provider) {
                                   return (
                                     <>
                                       <option
                                         key={index}
-                                        value={transcriber}
+                                        value={provider}
                                         selected
                                       >
-                                        {transcriber}
+                                        {provider}
                                       </option>
                                     </>
                                   );
                                 }
                                 return (
                                   <>
-                                    <option key={index} value={transcriber}>
-                                      {transcriber}
+                                    <option key={index} value={provider}>
+                                      {provider}
                                     </option>
                                   </>
                                 );
@@ -776,18 +828,38 @@ const Assistants = () => {
                               Language
                             </label>
                             <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2">
-                              <option>Open this select menu</option>
-                              <option value="1">One</option>
-                              <option value="2">Two</option>
-                              <option value="3" disabled>
-                                Three
-                              </option>
+                              {transcriberLanguages.map((language, index) => {
+                                if (assistantTranscriberLanguage === language) {
+                                  return (
+                                    <>
+                                      <option
+                                        key={index}
+                                        value={language}
+                                        selected
+                                      >
+                                        {language}
+                                      </option>
+                                    </>
+                                  );
+                                }
+                                return (
+                                  <>
+                                    <option key={index} value={language}>
+                                      {language}
+                                    </option>
+                                  </>
+                                );
+                              })}
                             </CFormSelect>
-                            <p className="text-xs">
-                              Pro tip: If you want to support both English and
-                              Spanish, you can set the language to multi and use
-                              ElevenLabs Turbo 2.5 in the Voice tab.
-                            </p>
+                            {assistantTranscriberProvider === "deepgram" && (
+                              <>
+                                <p className="text-xs">
+                                  Pro tip: If you want to support both English
+                                  and Spanish, you can set the language to multi
+                                  and use ElevenLabs Turbo 2.5 in the Voice tab.
+                                </p>
+                              </>
+                            )}
                           </div>
                         </div>
                         <div>
@@ -795,12 +867,80 @@ const Assistants = () => {
                             Model
                           </label>
                           <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2">
-                            <option>Open this select menu</option>
-                            <option value="1">One</option>
-                            <option value="2">Two</option>
-                            <option value="3" disabled>
-                              Three
-                            </option>
+                            {assistantTranscriberProvider === "deepgram"
+                              ? transcriberModel[1].model.map(
+                                  (model, index) => {
+                                    if (assistantTranscriberModel === model) {
+                                      return (
+                                        <>
+                                          <option
+                                            key={index}
+                                            value={model}
+                                            selected
+                                          >
+                                            {model}
+                                          </option>
+                                        </>
+                                      );
+                                    }
+                                    return (
+                                      <>
+                                        <option key={index} value={model}>
+                                          {model}
+                                        </option>
+                                      </>
+                                    );
+                                  }
+                                )
+                              : assistantTranscriberProvider === "talkscriber"
+                              ? transcriberModel[2].model.map(
+                                  (model, index) => {
+                                    if (assistantTranscriberModel === model) {
+                                      return (
+                                        <>
+                                          <option
+                                            key={index}
+                                            value={model}
+                                            selected
+                                          >
+                                            {model}
+                                          </option>
+                                        </>
+                                      );
+                                    }
+                                    return (
+                                      <>
+                                        <option key={index} value={model}>
+                                          {model}
+                                        </option>
+                                      </>
+                                    );
+                                  }
+                                )
+                              : transcriberModel[0].model.map(
+                                  (model, index) => {
+                                    if (assistantTranscriberModel === model) {
+                                      return (
+                                        <>
+                                          <option
+                                            key={index}
+                                            value={model}
+                                            selected
+                                          >
+                                            {model}
+                                          </option>
+                                        </>
+                                      );
+                                    }
+                                    return (
+                                      <>
+                                        <option key={index} value={model}>
+                                          {model}
+                                        </option>
+                                      </>
+                                    );
+                                  }
+                                )}
                           </CFormSelect>
                         </div>
                       </div>
@@ -1067,7 +1207,10 @@ const Assistants = () => {
                           <label className="flex justify-between items-center cursor-pointer">
                             <input
                               type="checkbox"
-                              value=""
+                              checked={enableEndCallFunction}
+                              onChange={(e) =>
+                                setEnableEndCallFunction(e.target.checked)
+                              }
                               className="sr-only peer"
                             />
                             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
@@ -1090,7 +1233,10 @@ const Assistants = () => {
                           <label className="flex justify-between items-center cursor-pointer">
                             <input
                               type="checkbox"
-                              value=""
+                              checked={enableDialKeypad}
+                              onChange={(e) =>
+                                setEnableDialKeypad(e.target.checked)
+                              }
                               className="sr-only peer"
                             />
                             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
@@ -1111,8 +1257,12 @@ const Assistants = () => {
                               </option>
                             </CFormSelect>
                             <input
-                              type="text"
+                              type="tel"
                               className="text-sm rounded-r-lg block w-full p-2.5 mb-2"
+                              value={forwadingNumber}
+                              onChange={(e) =>
+                                setForwadingNumber(e.target.value)
+                              }
                             />
                           </div>
                         </div>
@@ -1132,6 +1282,12 @@ const Assistants = () => {
                             placeholder="Phrases that if spoken by the bot will end the call.Eg: goodbye"
                             className="text-sm rounded-lg block w-full p-2.5 mb-2"
                             type="text"
+                            value={endCallPhrases.map((phrase) => {
+                              return phrase;
+                            })}
+                            onChange={(e) =>
+                              setEndCallPhrases([e.target.value])
+                            }
                           />
                         </div>
                         <hr />
@@ -1207,14 +1363,19 @@ const Assistants = () => {
                           <label className="flex justify-between items-center cursor-pointer">
                             <input
                               type="checkbox"
-                              value=""
+                              checked={enableHIPAA}
+                              onChange={(e) => setEnableHIPAA(e.target.checked)}
                               className="sr-only peer"
                             />
                             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                           </label>
                         </div>
                         <hr />
-                        <div className=" flex justify-between items-center py-3">
+                        <div
+                          className={`flex justify-between items-center py-3 ${
+                            enableHIPAA ? "cursor-not-allowed" : ""
+                          }`}
+                        >
                           <div className="flex justify-start items-center">
                             <MicrophoneIcon className="w-7 h-7 mr-3" />
                             <div className="flex flex-col">
@@ -1230,14 +1391,25 @@ const Assistants = () => {
                             <input
                               type="checkbox"
                               value=""
-                              checked
-                              className="sr-only peer"
+                              checked={
+                                enableHIPAA ? false : enableAudioRecording
+                              }
+                              onChange={(e) =>
+                                setEnableAudioRecording(e.target.value)
+                              }
+                              className={`sr-only peer ${
+                                enableHIPAA ? "pointer-events-none" : ""
+                              }`}
                             />
                             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                           </label>
                         </div>
                         <hr />
-                        <div className=" flex justify-between items-center py-3">
+                        <div
+                          className={`flex justify-between items-center py-3 ${
+                            enableHIPAA ? "cursor-not-allowed" : ""
+                          }`}
+                        >
                           <div className="flex justify-start items-center">
                             <CameraIcon className="w-7 h-7 mr-3" />
                             <div className="flex flex-col">
@@ -1261,8 +1433,15 @@ const Assistants = () => {
                             <input
                               type="checkbox"
                               value=""
-                              checked
-                              className="sr-only peer"
+                              checked={
+                                enableHIPAA ? false : enableVideoRecording
+                              }
+                              onChange={(e) =>
+                                setEnableVideoRecording(e.target.value)
+                              }
+                              className={`sr-only peer ${
+                                enableHIPAA ? "pointer-events-none" : ""
+                              }`}
                             />
                             <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                           </label>
@@ -1298,7 +1477,7 @@ const Assistants = () => {
                               max={600}
                               step={1}
                               value={silenceTimeout}
-                              defaultValue={silenceTimeout}
+                              defaultValue={30}
                               onChange={(e) =>
                                 setSilenceTimeout(e.target.value)
                               }
@@ -1330,7 +1509,7 @@ const Assistants = () => {
                               max={2}
                               step={0.1}
                               value={responseDelay}
-                              defaultValue={responseDelay}
+                              defaultValue={0.3}
                               onChange={(e) => setResponseDelay(e.target.value)}
                               className="w-full h-1"
                             />
