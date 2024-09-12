@@ -6,10 +6,12 @@ import ChatBubbleLeftRightIcon from "@heroicons/react/24/outline/ChatBubbleLeftR
 import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
 import UserGroupIcon from "@heroicons/react/24/outline/UserGroupIcon";
 import { VAPI_API_URL } from "../../../store";
+import { toast } from "react-toastify";
 function CreateAssistant() {
   const [assistantName, setAssistantName] = useState("");
   const [template, setTemplate] = useState("Blank");
   const [token, setToken] = useState(localStorage.getItem("token"));
+  const [assistantNameError, setAssistantNameError] = useState(false);
 
   useEffect(() => {
     console.log("template name", template);
@@ -208,39 +210,55 @@ function CreateAssistant() {
     //   credentialIds: [""],
     // });
 
-    const raw = JSON.stringify({
-      model: {
-        provider: "openai",
-        model: "gpt-3.5-turbo",
-        temperature: 0.7,
-        messages: [
-          {
-            content:
-              "This is a blank template with minimal defaults, you can change the model, temperature, and messages.",
-            role: "system",
-          },
-        ],
-      },
-      voice: {
-        provider: "cartesia",
-        voiceId: "248be419-c632-4f23-adf1-5324ed7dbf1d",
-      },
-      name: assistantName,
-    });
+    if (assistantName) {
+      setAssistantNameError(false);
+      const raw = JSON.stringify({
+        model: {
+          provider: "openai",
+          model: "gpt-3.5-turbo",
+          temperature: 0.7,
+          messages: [
+            {
+              content:
+                "This is a blank template with minimal defaults, you can change the model, temperature, and messages.",
+              role: "system",
+            },
+          ],
+        },
+        voice: {
+          provider: "cartesia",
+          voiceId: "248be419-c632-4f23-adf1-5324ed7dbf1d",
+        },
+        name: assistantName,
+      });
 
-    const options = {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: raw,
-    };
+      const options = {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer 32ce8935-a261-4732-a3af-d2cd6eaecdfb`,
+          "Content-Type": "application/json",
+        },
+        body: raw,
+      };
 
-    fetch(VAPI_API_URL + "assistant", options)
-      .then((response) => response.json())
-      .then((response) => console.log(response))
-      .catch((err) => console.error(err));
+      const postAssistantData = async () => {
+        try {
+          const response = await fetch(VAPI_API_URL + "assistant", options);
+          const result = await response.json();
+          if (result) {
+            console.log(result);
+            toast.success("Assistant Created Successfull!");
+            setAssistantName("");
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      };
+
+      postAssistantData();
+    } else {
+      setAssistantNameError(true);
+    }
   };
   return (
     <div className="my-3">
@@ -255,9 +273,6 @@ function CreateAssistant() {
           className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
         >
           Assistant Name{" "}
-          <span className="text-yellow-600">
-            (This can be adjusted at any time after creation.)
-          </span>
         </label>
         <input
           type="text"
@@ -268,9 +283,16 @@ function CreateAssistant() {
           value={assistantName}
           onChange={(e) => setAssistantName(e.target.value)}
         />
+        {assistantNameError && (
+          <>
+            <span className="text-red-500">
+              (Please enter the Assistant name.)
+            </span>
+          </>
+        )}
       </div>
       <div
-        className={`group w-full hover:bg-background cursor-pointer rounded-xl  overflow-hidden transition-all duration-150 ease-in-out active:scale-[0.99] flex flex-col bg-hover border mb-8 ${
+        className={`group w-full hover:bg-background cursor-pointer rounded-xl  overflow-hidden transition-all duration-150 ease-in-out active:scale-[0.99] flex flex-col bg-hover bg-gray-200 dark:bg-[#191E24] mb-8 ${
           template == "Blank"
             ? "border-[#5D17EB] border-[4px]"
             : "border-border"
@@ -296,7 +318,7 @@ function CreateAssistant() {
           <QuickStart />
         </div>
         <div
-          className={`w-full bg-foreground hover:bg-background cursor-pointer rounded-xl border overflow-hidden transition-all duration-150 ease-in-out active:scale-[0.98] flex flex-col ${
+          className={`w-full bg-foreground hover:bg-background cursor-pointer rounded-xl bg-gray-200 dark:bg-[#191E24] overflow-hidden transition-all duration-150 ease-in-out active:scale-[0.98] flex flex-col ${
             template == "Appointment Setter"
               ? "border-[#5D17EB] border-[4px]"
               : "border-border"
@@ -319,7 +341,7 @@ function CreateAssistant() {
           </div>
         </div>
         <div
-          className={`w-full bg-foreground hover:bg-background cursor-pointer rounded-xl border overflow-hidden transition-all duration-150 ease-in-out active:scale-[0.98] flex flex-col ${
+          className={`w-full bg-foreground hover:bg-background cursor-pointer rounded-xl bg-gray-200 dark:bg-[#191E24] overflow-hidden transition-all duration-150 ease-in-out active:scale-[0.98] flex flex-col ${
             template == "Customer Support"
               ? "border-[#5D17EB] border-[4px]"
               : "border-border"
@@ -339,7 +361,7 @@ function CreateAssistant() {
           </div>
         </div>
         <div
-          className={`w-full bg-foreground hover:bg-background cursor-pointer rounded-xl border overflow-hidden transition-all duration-150 ease-in-out active:scale-[0.98] flex flex-col ${
+          className={`w-full bg-foreground hover:bg-background cursor-pointer rounded-xl bg-gray-200 dark:bg-[#191E24] overflow-hidden transition-all duration-150 ease-in-out active:scale-[0.98] flex flex-col ${
             template == "Inbound Q/A"
               ? "border-[#5D17EB] border-[4px]"
               : "border-border"
@@ -359,8 +381,8 @@ function CreateAssistant() {
           </div>
         </div>
         <div
-          className={`w-full bg-foreground hover:bg-background cursor-pointer rounded-xl border overflow-hidden transition-all duration-150 ease-in-out active:scale-[0.98] flex flex-col ${
-            template == "Game NPC"
+          className={`w-full bg-foreground hover:bg-background cursor-pointer rounded-xl bg-gray-200 dark:bg-[#191E24] overflow-hidden transition-all duration-150 ease-in-out active:scale-[0.98] flex flex-col ${
+            template === "Game NPC"
               ? "border-[#5D17EB] border-[4px]"
               : "border-border"
           }`}
@@ -383,7 +405,7 @@ function CreateAssistant() {
       <button
         type="button"
         onClick={createAssistant}
-        className="mt-3 float-right text-white bg-[#5D17EB] hover:bg-[#5e17ebdd] focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+        className="mt-3 float-right text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8] focus:outline-none"
       >
         Create Assistant
       </button>
