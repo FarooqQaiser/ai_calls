@@ -144,24 +144,24 @@ const PhoneNumbers = () => {
         </div>
       )}
       {showPhoneNoDetail && (
-        <div className="flex justify-start h-full">
+        <div className="flex justify-start h-full ">
           <div
             data-testid="assistant-menu"
-            className="border-r border-border hide-scrollbar h-[200px] sm:h-full w-full sm:max-w-[320px]"
+            className="border-r border-border hide-scrollbar h-[200px] sm:h-full w-full sm:max-w-[280px]"
           >
             <div className="flex sticky p-2 top-0 border-b border-border bg-foreground/5 backdrop-blur-lg">
               <button
                 type="button"
                 disabled
                 onClick={() => openImportNumberModal()}
-                className="w-full opacity-50 mr-3  text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                className="w-full opacity-50 mr-3  text-white bg-[#5D17EB] hover:bg-[#4c2992] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-[#5D17EB] dark:hover:bg-[#4c2992] dark:focus:ring-[#4c2992]"
               >
                 Buy Number
               </button>
               <button
                 type="button"
                 onClick={() => openImportNumberModal()}
-                className="w-full  text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                className="w-full  text-white bg-[#5D17EB] hover:bg-[#4c2992] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-[#5D17EB] dark:hover:bg-[#4c2992] dark:focus:ring-[#4c2992]"
               >
                 Import
                 <PlusICon className="w-5 h-5 ml-3" />
@@ -179,7 +179,7 @@ const PhoneNumbers = () => {
                 phoneNumbers.length > 0 &&
                 phoneNumbers.map((no, index) => (
                   <div
-                    className={`group flex flex-col p-2 rounded-lg w-full border border-transparent hover:bg-background/50 cursor-pointer transition-all duration-150 ease-in-out ${
+                    className={`group flex flex-col p-2  rounded-lg w-full border border-transparent hover:bg-background/50 cursor-pointer transition-all duration-150 ease-in-out ${
                       currentPhoneNumber?.number == no.number
                         ? "bg-primary/10"
                         : ""
@@ -200,7 +200,7 @@ const PhoneNumbers = () => {
                 ))}
             </div>
           </div>
-          <div className="p-4">
+          <div className="p-4 w-full">
             <div className="flex justify-start flex-col items-start mb-3">
               <div className="ellipsis-text font-bold text-xl mb-1">
                 {currentPhoneNumber?.number}
@@ -213,10 +213,10 @@ const PhoneNumbers = () => {
                     readOnly
                     name="callID"
                     value="84ah887nb-hdb7nb-ddb89"
-                    className="bg-gray-200 dark:bg-[#14171A] text-center p-2 rounded-l-lg"
+                    className="bg-white dark:bg-[#14171A] text-center p-2 rounded-l-lg"
                   />
                   <button
-                    className="bg-gray-200 dark:bg-[#14171A] rounded-r-lg p-2"
+                    className="bg-white dark:bg-[#14171A] rounded-r-lg p-2"
                     onClick={() => handleCopyButton("84ah887nb-hdb7nb-ddb89")}
                   >
                     <IoCopy />
@@ -227,132 +227,132 @@ const PhoneNumbers = () => {
                 This number was imported from your twilio account.
               </div>
             </div>
-            <div className="bg-gray-200 dark:bg-[#14171A] p-3 mt-3 rounded-xl border">
+            <div className="bg-white dark:bg-[#14171A] p-3 mt-3 rounded-xl ">
               <CCard>
                 <CCardBody className="bg-background/80">
-                  <h1 className="font-extrabold">Inbound Settings</h1>
-                  <p>
+                  <h1 className="font-extrabold text-lg text-black dark:text-white">
+                    Inbound Settings
+                  </h1>
+                  <p className="text-sm mt-1">
                     You can assign an assistant to the phone number so that
                     whenever someone calls this phoneNumber the assistant will
                     automatically be assigned to the call.
                   </p>
-                  <div className="rounded-xl p-3 bg-gray-200 dark:bg-[#1A1C1F] border-[#1A1C1F] dark:border-bg-gray-300 shadow border mt-3">
-                    <div>
-                      <label class="mb-2 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
-                        Inbound Phone Number
-                      </label>
-                      <input
-                        type="text"
-                        id="first_name"
-                        class="text-sm rounded-lg block w-full p-2.5 mb-3"
-                        placeholder=""
-                        required
-                        value={currentPhoneNumber?.number}
-                      />
-                    </div>
-                    <hr />
-                    <div className="mt-3">
-                      <label class="mb-2 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
-                        Assistant
-                      </label>
-                      <CFormSelect class="text-sm rounded-lg block w-full p-2.5 mb-3">
-                        <option>Select Assistant</option>
-                        <option value="1" selected>
-                          Auto master
-                        </option>
-                        <option value="2">Two</option>
-                        <option value="3" disabled>
-                          Three
-                        </option>
-                      </CFormSelect>
-                    </div>
-                    <hr />
-                    <div className="mt-3">
-                      <label class="mb-2 text-gray-900 dark:text-white flex flex-col justify-start items-start">
-                        <span className="mb-1 text-sm font-medium">
-                          Fallback Destination
-                        </span>
-                        <span className="text-xs">
-                          Set a fallback destination for inbound call.
-                        </span>
-                      </label>
-                      <input
-                        type="text"
-                        id="first_name"
-                        class="text-sm rounded-lg block w-full p-2.5 mb-3"
-                        placeholder="Enter a Phone number"
-                        required
-                      />
-                    </div>
+                  <div>
+                    <label class="mb-2 mt-3 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
+                      Inbound Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      id="first_name"
+                      class="text-sm rounded-lg block w-full p-2.5 mb-3 bg-base-200"
+                      placeholder=""
+                      required
+                      value={currentPhoneNumber?.number}
+                    />
+                  </div>
+                  {/* <hr /> */}
+                  <div className="mt-3">
+                    <label class="mb-2 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
+                      Assistant
+                    </label>
+                    <CFormSelect class="text-sm rounded-lg block w-full p-2.5 mb-3 bg-base-200">
+                      <option>Select Assistant</option>
+                      <option value="1" selected>
+                        Auto master
+                      </option>
+                      <option value="2">Two</option>
+                      <option value="3" disabled>
+                        Three
+                      </option>
+                    </CFormSelect>
+                  </div>
+                  {/* <hr /> */}
+                  <div className="mt-3">
+                    <label class="mb-2 text-gray-900 dark:text-white flex flex-col justify-start items-start">
+                      <span className="mb-1 text-sm font-medium">
+                        Fallback Destination
+                      </span>
+                      <span className="text-xs">
+                        Set a fallback destination for inbound call.
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      id="first_name"
+                      class="text-sm rounded-lg block w-full p-2.5 mb-3 bg-base-200"
+                      placeholder="Enter a Phone number"
+                      required
+                    />
                   </div>
                 </CCardBody>
               </CCard>
             </div>
-            <div className="bg-gray-200 dark:bg-[#14171A] p-3 my-4 rounded-xl border">
+            <div className="bg-white dark:bg-[#14171A] p-3 my-4 rounded-xl ">
               <CCard>
                 <CCardBody className="bg-background/80">
-                  <h1 className="font-extrabold">Outbound Form</h1>
-                  <p>
+                  <h1 className="font-extrabold text-lg text-black dark:text-white">
+                    Outbound Form
+                  </h1>
+                  <p className="text-sm mt-1">
                     You can assign an outbound phone number, setup a fallback
                     and setup a squad to be called if the assistant is not
                     available.
                   </p>
-                  <div className="rounded-xl p-3 bg-gray-200 dark:bg-[#1A1C1F] border-[#1A1C1F] dark:border-bg-gray-300 shadow border mt-3">
-                    <div className="mt-3">
-                      <label class="mb-2 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-start">
-                        Outbound Phone Number
-                      </label>
-                      <input
-                        type="text"
-                        id="first_name"
-                        class="text-sm rounded-lg block w-full p-2.5 mb-3"
-                        placeholder="Enter a Phone number"
-                        required
-                      />
-                    </div>
-                    <hr />
-                    <div className="mt-3">
-                      <label class="mb-2 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
-                        Assistant
-                      </label>
-                      <CFormSelect class="text-sm rounded-lg block w-full p-2.5 mb-3">
-                        <option>Select Assistant..</option>
-                        <option value="1">One</option>
-                        <option value="2">Two</option>
-                        <option value="3" disabled>
-                          Three
-                        </option>
-                      </CFormSelect>
-                    </div>
-                    <hr />
-                    <div className="mt-3">
-                      <label class="mb-2 text-gray-900 dark:text-white flex flex-col justify-start items-start">
-                        <span className="mb-1 text-sm font-medium">Squad</span>
-                        <span className="text-xs">
-                          If the assistant is not available, the call be routed
-                          to the specific squad.
-                        </span>
-                      </label>
-                      <CFormSelect class="text-sm rounded-lg block w-full p-2.5 mb-3">
-                        <option>Select Squad..</option>
-                        <option value="1">One</option>
-                        <option value="2">Two</option>
-                        <option value="3" disabled>
-                          Three
-                        </option>
-                      </CFormSelect>
-                    </div>
-                    <hr />
-                    <button
-                      type="button"
-                      onClick={() => openImportNumberModal()}
-                      disabled
-                      className="w-auto mt-3 opacity-50 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                    >
-                      <PhoneICon className="w-5 h-5 mr-2" />
-                      Outbound Call
-                    </button>
+                  <div className="mt-3">
+                    <label class="mb-2 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-start">
+                      Outbound Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      id="first_name"
+                      class="text-sm rounded-lg block w-full p-2.5 mb-3 bg-base-200"
+                      placeholder="Enter a Phone number"
+                      required
+                    />
                   </div>
+                  {/* <hr /> */}
+                  <div className="mt-3">
+                    <label class="mb-2 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
+                      Assistant
+                    </label>
+                    <CFormSelect class="text-sm rounded-lg block w-full p-2.5 mb-3 bg-base-200">
+                      <option>Select Assistant..</option>
+                      <option value="1">One</option>
+                      <option value="2">Two</option>
+                      <option value="3" disabled>
+                        Three
+                      </option>
+                    </CFormSelect>
+                  </div>
+                  {/* <hr /> */}
+                  <div className="mt-3">
+                    <label class="mb-2 text-gray-900 dark:text-white flex flex-col justify-start items-start">
+                      <span className="mb-1 text-sm font-medium">Squad</span>
+                      <span className="text-xs">
+                        If the assistant is not available, the call be routed to
+                        the specific squad.
+                      </span>
+                    </label>
+                    <CFormSelect class="text-sm rounded-lg block w-full p-2.5 mb-3 bg-base-200">
+                      <option>Select Squad..</option>
+                      <option value="1">One</option>
+                      <option value="2">Two</option>
+                      <option value="3" disabled>
+                        Three
+                      </option>
+                    </CFormSelect>
+                  </div>
+                  {/* <hr /> */}
+                  <button
+                    type="button"
+                    onClick={() => openImportNumberModal()}
+                    disabled
+                    className="w-auto mt-3 opacity-50 text-white bg-[#5D17EB] hover:bg-[#4c2992] focus:ring-4 focus:outline-none focus:ring-[#4c2992] font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center   dark:bg-[#5D17EB] dark:hover:bg-[#4c2992] dark:focus:ring-[#4c2992]"
+                  >
+                    <PhoneICon className="w-5 h-5 mr-2" />
+                    Outbound Call
+                  </button>
                 </CCardBody>
               </CCard>
             </div>

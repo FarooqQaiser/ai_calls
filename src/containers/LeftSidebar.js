@@ -6,7 +6,7 @@ import { useState } from "react";
 import { FaBars, FaGreaterThan, FaLessThan } from "react-icons/fa";
 
 function LeftSidebar() {
-  const [sidebarWidth, setSidebarWidth] = useState(320); // Initialize with the full width (320px)
+  const [sidebarWidth, setSidebarWidth] = useState(240); // Initialize with the full width (320px)
   const location = useLocation();
   const dispatch = useDispatch();
 
@@ -15,7 +15,7 @@ function LeftSidebar() {
   };
 
   const handleWidth = () => {
-    setSidebarWidth((prevWidth) => (prevWidth === 320 ? 80 : 320));
+    setSidebarWidth((prevWidth) => (prevWidth === 240 ? 80 : 240));
   };
 
   return (
@@ -25,7 +25,7 @@ function LeftSidebar() {
     >
       <label htmlFor="left-sidebar-drawer" className="drawer-overlay"></label>
 
-      <ul className="menu pt-2 bg-base-100 min-h-full text-base-content">
+      <ul className="menu pt-2 bg-base-100 w-full min-h-full text-base-content">
         <button
           className="btn btn-ghost bg-base-300 btn-circle z-50 top-0 right-0 mt-4 mr-2 absolute lg:hidden"
           onClick={close}
@@ -35,14 +35,18 @@ function LeftSidebar() {
 
         <li className="mb-2 font-semibold text-xl">
           <Link className="justify-between" onClick={handleWidth}>
-            {sidebarWidth === 320 && (
+            {sidebarWidth === 240 && (
               <div className="flex-row flex items-center gap-3">
                 <div className="bg-[#5D17EB] p-2 rounded-xl text-white">AC</div>
                 <span>AI Caller</span>
               </div>
             )}
-            <div className="flex justify-center items-center">
-              <FaBars />
+            <div
+              className={`flex justify-center items-center ${
+                sidebarWidth === 240 ? "" : "px-1 py-2 "
+              }`}
+            >
+              <FaBars className="text-xl" />
             </div>
           </Link>
         </li>
@@ -52,11 +56,13 @@ function LeftSidebar() {
               end
               to={route.path}
               className={({ isActive }) =>
-                `${isActive ? "font-semibold bg-base-200" : "font-normal"}`
+                `${
+                  isActive ? "font-semibold bg-base-200 " : "font-normal "
+                } mt-1`
               }
             >
               {route.icon}
-              {sidebarWidth === 320 && <span>{route.name}</span>}{" "}
+              {sidebarWidth === 240 && <span>{route.name}</span>}{" "}
               {/* Show text only when full width */}
               {location.pathname === route.path ? (
                 <span

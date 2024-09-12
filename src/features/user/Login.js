@@ -27,6 +27,8 @@ function Login() {
     if (loginObj.password.trim() === "")
       return setErrorMessage("Password is required!");
 
+    setLoading(false);
+    navigate("/");
     // try {
     //   setLoading(true);
 
@@ -116,15 +118,13 @@ function Login() {
               </div>
 
               {/* <ErrorText styleClass="mt-8">{errorMessage}</ErrorText> */}
-              <Link to="/">
-                <button
-                  type="submit"
-                  className={`btn mt-2 w-full btn-primary `}
-                  disabled={loading}
-                >
-                  {loading ? "Logging in..." : "Login"}
-                </button>
-              </Link>
+              <button
+                type="submit"
+                className={`btn mt-2 w-full btn-primary `}
+                disabled={loading}
+              >
+                {loading ? "Logging in..." : "Login"}
+              </button>
 
               <div className="text-center mt-4">
                 Don't have an account yet?{" "}
