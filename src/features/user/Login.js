@@ -28,50 +28,49 @@ function Login() {
       return setErrorMessage("Password is required!");
 
     setLoading(false);
-    navigate("/");
-    // try {
-    //   setLoading(true);
+    try {
+      setLoading(true);
 
-    //   const response = await fetch(API_URL + "api/users/login", {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify({
-    //       email: loginObj.emailId,
-    //       password: loginObj.password,
-    //     }),
-    //   });
+      const response = await fetch(API_URL + "api/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: loginObj.emailId,
+          password: loginObj.password,
+        }),
+      });
 
-    //   const data = await response.json();
-    //   if (!response.ok) {
-    //     throw new Error(
-    //       data.message || "Login failed. Please check your credentials."
-    //     );
-    //   }
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Login failed. Please check your credentials."
+        );
+      }
 
-    //   const { token, user } = data;
-    //   localStorage.setItem("token", token);
-    //   localStorage.setItem("user", JSON.stringify(user));
-    //   const storedUser = JSON.parse(localStorage.getItem("user"));
-    //   const userName = storedUser?.firstName;
+      const { token, user } = data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      const userName = storedUser?.firstName;
 
-    //   setLoading(false);
-    //   navigate("/");
-    //   toast.success(`Welcome ${userName}`, {
-    //     position: "top-right",
-    //     autoClose: 1000,
-    //     hideProgressBar: false,
-    //     closeOnClick: true,
-    //     pauseOnHover: true,
-    //     draggable: true,
-    //     progress: undefined,
-    //   });
-    // } catch (error) {
-    //   toast.error(error.message || "An error occurred. Please try again.");
-    //   setLoading(false);
-    //   setErrorMessage(error.message || "An error occurred. Please try again.");
-    // }
+      setLoading(false);
+      navigate("/");
+      toast.success(`Welcome ${userName}`, {
+        position: "top-right",
+        autoClose: 1000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    } catch (error) {
+      toast.error(error.message || "An error occurred. Please try again.");
+      setLoading(false);
+      setErrorMessage(error.message || "An error occurred. Please try again.");
+    }
   };
 
   const updateFormValue = ({ updateType, value }) => {
