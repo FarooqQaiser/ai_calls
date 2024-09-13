@@ -50,11 +50,11 @@ const VoiceLibrary = () => {
 
   return (
     <>
-      <div className="flex items-center gap-2 w-full">
+      {/* <div className="flex items-center gap-2 w-full">
         <RiVoiceprintLine className="w-8 h-8 p-2 rounded-lg dark:bg-[#1D232A] bg-[#FFFFFF]" />
         <p className="text-lg font-semibold">Voice Library</p>
-      </div>
-      <div className="p-5 flex flex-col gap-y-5">
+      </div> */}
+      <div className=" flex flex-col gap-y-5">
         <ControlDiv />
         {privateVoices !== null && publicVoices !== null ? (
           <>

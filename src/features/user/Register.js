@@ -119,18 +119,16 @@ function Register() {
     const userId = localStorage.getItem("userId");
     try {
       setLoading(true);
-      const response = await fetch(
-        API_URL + `api/users/verify-user/${userId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            verificationToken: combinedValue,
-          }),
-        }
-      );
+      const response = await fetch(API_URL + `api/users/verify-user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: userId,
+          verificationToken: combinedValue,
+        }),
+      });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(

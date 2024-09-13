@@ -60,6 +60,8 @@ import { API_URL, VAPI_API_URL } from "../../store";
 import CountriesData from "../../countriesData.json";
 import DeleteConfirmationModal from "../../components/Assistants Api/DeleteConfirmationModal";
 import { toast } from "react-toastify";
+import PublishUpdatedAssistant from "../../components/Assistants Api/PublishUpdatedAssistant";
+import { dataStructure } from "../../components/Assistants Api/UpdatedDataStructure";
 
 const Assistants = () => {
   const dispatch = useDispatch();
@@ -110,6 +112,10 @@ const Assistants = () => {
   const [isDeleteAssistant, setIsDeleteAssistant] = useState(false);
   const [isCurrentAssistantDataLoading, setIsCurrentAssistantDataLoading] =
     useState(false);
+  const [isSelected, setIsSelected] = useState(false);
+  const [isPublishUpdatedAssistant, setIsPublishUpdatedAssistant] =
+    useState(false);
+  const [assistantObj, setAssistantObj] = useState(dataStructure);
 
   const MESSAGES = [
     "conversation-update",
@@ -343,7 +349,7 @@ const Assistants = () => {
         setSuccessEvaluationRubric(result.analysisPlan.successEvaluationRubric);
         setStructuredDataPrompt(result.analysisPlan.structuredDataPrompt);
         if (result.forwardingPhoneNumber) {
-          const rawNumber = result.forwardingPhoneNumber
+          const phoneNumber = result.forwardingPhoneNumber
             .split("")
             .reverse()
             .join("")
@@ -352,7 +358,7 @@ const Assistants = () => {
           setCountry(
             CountriesData.filter(
               (country) =>
-                country.dial_code === rawNumber.split("").reverse().join("")
+                country.dial_code === phoneNumber.split("").reverse().join("")
             )
           );
         }
@@ -361,7 +367,75 @@ const Assistants = () => {
     if (assistantId) {
       getAssistant();
     }
-  }, [assistantId]);
+  }, [assistantId, assistantObj]);
+
+  useEffect(() => {
+    assistantObj.name = currentAssistant.name;
+    assistantObj.model.temperature = temperature;
+    assistantObj.firstMessage = firstMessage;
+    assistantObj.model.messages[0].content = systemPrompt;
+    assistantObj.model.provider = modelProvider;
+    assistantObj.model.model = aiModel;
+    assistantObj.model.maxTokens = maxTokens;
+    assistantObj.model.emotionRecognitionEnabled = emotionRecognitionEnabled;
+    assistantObj.transcriber.provider = assistantTranscriberProvider;
+    assistantObj.transcriber.language = assistantTranscriberLanguage;
+    assistantObj.transcriber.model = assistantTranscriberModel;
+    assistantObj.endCallFunctionEnabled = enableEndCallFunction;
+    assistantObj.dialKeypadFunctionEnabled = enableDialKeypad;
+    assistantObj.endCallPhrases = endCallPhrases;
+    assistantObj.forwardingPhoneNumber = forwadingNumber;
+    assistantObj.hipaaEnabled = enableHIPAA;
+    assistantObj.recordingEnabled = enableAudioRecording;
+    assistantObj.artifactPlan.videoRecordingEnabled = enableVideoRecording;
+    assistantObj.silenceTimeoutSeconds = silenceTimeout;
+    assistantObj.responseDelaySeconds = responseDelay;
+    assistantObj.llmRequestDelaySeconds = LlmReqDelay;
+    assistantObj.numWordsToInterruptAssistant = interruption;
+    assistantObj.maxDurationSeconds = maxDuration;
+    assistantObj.clientMessages = clientMessages;
+    assistantObj.voicemailMessage = voicemailMessage;
+    assistantObj.endCallMessage = endCallMessage;
+    assistantObj.messagePlan.idleMessages = idleMessages;
+    // assistantObj.messagePlan.idleMessages.length =  result.messagePlan.idleMessages.length;
+    assistantObj.analysisPlan.summaryPrompt = summaryPrompt;
+    assistantObj.analysisPlan.successEvaluationPrompt = successEvaluationPrompt;
+    assistantObj.analysisPlan.successEvaluationRubric = successEvaluationRubric;
+    assistantObj.analysisPlan.structuredDataPrompt = structuredDataPrompt;
+  }, [
+    assistantObj,
+    currentAssistant.name,
+    temperature,
+    firstMessage,
+    systemPrompt,
+    modelProvider,
+    aiModel,
+    maxTokens,
+    emotionRecognitionEnabled,
+    assistantTranscriberProvider,
+    assistantTranscriberLanguage,
+    assistantTranscriberModel,
+    enableEndCallFunction,
+    enableDialKeypad,
+    endCallPhrases,
+    forwadingNumber,
+    enableHIPAA,
+    enableAudioRecording,
+    enableVideoRecording,
+    silenceTimeout,
+    responseDelay,
+    LlmReqDelay,
+    interruption,
+    maxDuration,
+    clientMessages,
+    voicemailMessage,
+    endCallMessage,
+    idleMessages,
+    summaryPrompt,
+    successEvaluationPrompt,
+    successEvaluationRubric,
+    structuredDataPrompt,
+  ]);
 
   useEffect(() => {
     dispatch(setPageTitle({ title: "Assistants" }));
@@ -389,6 +463,11 @@ const Assistants = () => {
 
   const handleTrashIcon = () => {
     setIsDeleteAssistant(true);
+  };
+
+  const handlePublishButton = () => {
+    setIsPublishUpdatedAssistant(true);
+    console.log(assistantObj);
   };
 
   return (
@@ -701,6 +780,7 @@ const Assistants = () => {
                         <button
                           type="button"
                           className="w-auto mr-2 text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-3 py-2.5 text-center flex justify-center items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8]"
+                          onClick={handlePublishButton}
                         >
                           <PublishIcon className="w-5 h-5 mr-2" />
                           Publish
@@ -715,6 +795,18 @@ const Assistants = () => {
                         </button>
                       </div>
                     </div>
+                    {isPublishUpdatedAssistant && (
+                      <>
+                        <PublishUpdatedAssistant
+                          isPublishUpdatedAssistant={isPublishUpdatedAssistant}
+                          setIsPublishUpdatedAssistant={
+                            setIsPublishUpdatedAssistant
+                          }
+                          assistantId={assistantId}
+                          assistantObj={assistantObj}
+                        />
+                      </>
+                    )}
                     {isDeleteAssistant && (
                       <>
                         <DeleteConfirmationModal
@@ -798,7 +890,12 @@ const Assistants = () => {
                                     <label className="mb-1 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                                       Provider
                                     </label>
-                                    <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]">
+                                    <CFormSelect
+                                      className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]"
+                                      onChange={(e) =>
+                                        setModelProvider(e.target.value)
+                                      }
+                                    >
                                       {providers.map((provider, index) => {
                                         if (modelProvider === provider) {
                                           return (
@@ -839,7 +936,12 @@ const Assistants = () => {
                                         <ExclamationICon className="w-4 h-4 text-yellow-500 ml-4" />
                                       </CTooltip>
                                     </label>
-                                    <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]">
+                                    <CFormSelect
+                                      className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]"
+                                      onChange={(e) =>
+                                        setAIModel(e.target.value)
+                                      }
+                                    >
                                       {models.map((model, index) => {
                                         if (aiModel === model) {
                                           return (
@@ -993,7 +1095,14 @@ const Assistants = () => {
                                     <label className="mb-1 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                                       Provider
                                     </label>
-                                    <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]">
+                                    <CFormSelect
+                                      className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]"
+                                      onChange={(e) =>
+                                        setAssistantTranscriberProvider(
+                                          e.target.value
+                                        )
+                                      }
+                                    >
                                       {transcriberProvider.map(
                                         (provider, index) => {
                                           if (
@@ -1032,7 +1141,14 @@ const Assistants = () => {
                                     <label className="mb-1 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                                       Language
                                     </label>
-                                    <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]">
+                                    <CFormSelect
+                                      className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]"
+                                      onChange={(e) =>
+                                        setAssistantTranscriberLanguage(
+                                          e.target.value
+                                        )
+                                      }
+                                    >
                                       {transcriberLanguages.map(
                                         (language, index) => {
                                           if (
@@ -1083,7 +1199,14 @@ const Assistants = () => {
                                   <label className="mb-1 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                                     Model
                                   </label>
-                                  <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]">
+                                  <CFormSelect
+                                    className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]"
+                                    onChange={(e) =>
+                                      setAssistantTranscriberModel(
+                                        e.target.value
+                                      )
+                                    }
+                                  >
                                     {assistantTranscriberProvider === "deepgram"
                                       ? transcriberModel[1].model.map(
                                           (model, index) => {
@@ -1574,61 +1697,52 @@ const Assistants = () => {
                                   <label className="mb-1 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                                     Forwarding Phone Number
                                   </label>
-                                  <div className="sm:w-1/3 grid grid-cols-2">
+                                  <div className="flex">
                                     <CFormSelect
-                                      className="text-sm rounded-l-lg block w-auto p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]"
+                                      className="w-1/4 text-sm rounded-l-lg p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]"
                                       onChange={(e) => {
                                         const number =
                                           document.querySelector(
                                             ".forwadingNumber"
                                           );
-                                        number.value = null;
+                                        number.value = 0;
+                                        setIsSelected(e.target.value);
                                       }}
                                     >
+                                      <option
+                                        className="bg-[#F2F2F2] dark:bg-[#191E24]"
+                                        value=""
+                                        selected
+                                      >
+                                        none
+                                      </option>
                                       {CountriesData.map(
-                                        (countryData, index) => {
-                                          if (country) {
-                                            if (
-                                              countryData.dial_code ===
-                                              country[0].dial_code
-                                            ) {
-                                              return (
-                                                <>
-                                                  <option
-                                                    className="bg-[#F2F2F2] dark:bg-[#191E24]"
-                                                    key={index}
-                                                    value={countryData.name}
-                                                    selected
-                                                  >
-                                                    {countryData.name}{" "}
-                                                    {countryData.dial_code}
-                                                  </option>
-                                                </>
-                                              );
-                                            }
-                                          }
-                                          return (
-                                            <>
-                                              <option
-                                                className="bg-[#F2F2F2] dark:bg-[#191E24]"
-                                                key={index}
-                                                value={countryData.name}
-                                              >
-                                                {countryData.name}{" "}
-                                                {countryData.dial_code}
-                                              </option>
-                                            </>
-                                          );
-                                        }
+                                        (countryData, index) => (
+                                          <option
+                                            className="bg-[#F2F2F2] dark:bg-[#191E24]"
+                                            key={index}
+                                            value={countryData.dial_code}
+                                          >
+                                            {isSelected ===
+                                            countryData.dial_code
+                                              ? countryData.dial_code
+                                              : `${countryData.name} ${countryData.dial_code}`}
+                                          </option>
+                                        )
                                       )}
                                     </CFormSelect>
                                     <input
                                       type="tel"
-                                      className="forwadingNumber text-sm rounded-r-lg block w-full p-2.5 mb-2 bg-[#F2F2F2] dark:bg-[#191E24]"
+                                      className="forwadingNumber text-sm rounded-r-lg block p-2.5 mb-2 bg-[#F2F2F2] dark:bg-[#191E24]"
                                       value={forwadingNumber}
-                                      onChange={(e) =>
-                                        setForwadingNumber(e.target.value)
-                                      }
+                                      onChange={(e) => {
+                                        const input = e.target.value;
+                                        const numericValue = input.replace(
+                                          /[^0-9]/g,
+                                          ""
+                                        ); // Remove non-numeric characters
+                                        setForwadingNumber(numericValue); // Set the cleaned numeric value
+                                      }}
                                     />
                                   </div>
                                 </div>
@@ -1675,11 +1789,11 @@ const Assistants = () => {
                               >
                                 Note: Functions are the same as tools, except
                                 they follow older syntax as per the OpenAI Spec.
-                                Check our{" "}
+                                {/*Check our{" "}
                                 <a href="/" className="font-semibold underline">
                                   functions guide
                                 </a>{" "}
-                                for more details
+                                for more details*/}
                               </div>
                               <button
                                 type="button"
@@ -1767,7 +1881,9 @@ const Assistants = () => {
                                           : enableAudioRecording
                                       }
                                       onChange={(e) =>
-                                        setEnableAudioRecording(e.target.value)
+                                        setEnableAudioRecording(
+                                          e.target.checked
+                                        )
                                       }
                                       className={`sr-only peer ${
                                         enableHIPAA ? "pointer-events-none" : ""
@@ -1811,7 +1927,9 @@ const Assistants = () => {
                                           : enableVideoRecording
                                       }
                                       onChange={(e) =>
-                                        setEnableVideoRecording(e.target.value)
+                                        setEnableVideoRecording(
+                                          e.target.checked
+                                        )
                                       }
                                       className={`sr-only peer ${
                                         enableHIPAA ? "pointer-events-none" : ""
@@ -1877,6 +1995,7 @@ const Assistants = () => {
                                       </span>
                                     </div>
                                   </div>
+                                  {/*responseDelay setResponseDelay*/}
                                   <div className="flex justify-end items-center">
                                     <CFormRange
                                       min={0}
@@ -2294,7 +2413,14 @@ const Assistants = () => {
                                         This enforces the rubric of the
                                         evaluation upon the Success Evaluation.
                                       </div>
-                                      <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]">
+                                      <CFormSelect
+                                        className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]"
+                                        onChange={(e) =>
+                                          setSuccessEvaluationRubric(
+                                            e.target.value
+                                          )
+                                        }
+                                      >
                                         {SUCCESS_EVALUATION_RUBRIC.map(
                                           (evaluationRubric, index) => {
                                             if (

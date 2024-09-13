@@ -16,6 +16,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { toast } from "react-toastify";
+import { FaUser } from "react-icons/fa6";
 
 function Header() {
   const dispatch = useDispatch();
@@ -119,7 +120,7 @@ function Header() {
           </label>
 
           {/* Notification icon */}
-          <button
+          {/* <button
             className="btn btn-ghost ml-4  btn-circle"
             onClick={() => openNotification()}
           >
@@ -131,13 +132,13 @@ function Header() {
                 </span>
               ) : null}
             </div>
-          </button>
+          </button> */}
 
           {/* Profile icon, opening menu on click */}
           <div className="dropdown dropdown-end ml-4">
             <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
-              <div className="w-10 rounded-full">
-                <img src="https://placeimg.com/80/80/people" alt="profile" />
+              <div className="">
+                <FaUser className="text-2xl " />
               </div>
             </label>
             <ul
@@ -150,9 +151,9 @@ function Header() {
                   <span className="badge">New</span>
                 </Link>
               </li>
-              <li className="">
+              {/* <li className="">
                 <Link to={"/app/settings-billing"}>Bill History</Link>
-              </li>
+              </li> */}
               <div className="divider mt-0 mb-0"></div>
               <li>
                 <a onClick={logoutUser}>Logout</a>
