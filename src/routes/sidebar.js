@@ -34,26 +34,26 @@ const routes = [
     icon: <PhoneIcon className={submenuIconClasses} />,
     name: "Phone Numbers",
   },
-  {
-    path: "/files",
-    icon: <DocumentTextIcon className={`${iconClasses} inline`} />,
-    name: "Files",
-  },
-  {
-    path: "/tools",
-    icon: <ToolsIcon className={submenuIconClasses} />,
-    name: "Tools",
-  },
-  {
-    path: "/blocks",
-    icon: <Squares2X2Icon className={iconClasses} />,
-    name: "Blocks",
-  },
-  {
-    path: "/squads",
-    icon: <UsersIcon className={submenuIconClasses} />,
-    name: "Squads",
-  },
+  // {
+  //   path: "/files",
+  //   icon: <DocumentTextIcon className={`${iconClasses} inline`} />,
+  //   name: "Files",
+  // },
+  // {
+  //   path: "/tools",
+  //   icon: <ToolsIcon className={submenuIconClasses} />,
+  //   name: "Tools",
+  // },
+  // {
+  //   path: "/blocks",
+  //   icon: <Squares2X2Icon className={iconClasses} />,
+  //   name: "Blocks",
+  // },
+  // {
+  //   path: "/squads",
+  //   icon: <UsersIcon className={submenuIconClasses} />,
+  //   name: "Squads",
+  // },
   {
     path: "/voice-library",
     icon: <MicrophoneIcon className={iconClasses} />,

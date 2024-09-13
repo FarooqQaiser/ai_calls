@@ -1,4 +1,4 @@
-const dataStructure = {
+export const dataStructure = {
   transcriber: {
     provider: "deepgram",
     model: "nova-2",

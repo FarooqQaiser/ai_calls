@@ -28,6 +28,7 @@ function Login() {
       return setErrorMessage("Password is required!");
 
     setLoading(false);
+    // navigate("/");
     try {
       setLoading(true);
 
