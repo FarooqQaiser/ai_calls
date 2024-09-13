@@ -5,13 +5,14 @@ import QueueListIcon from "@heroicons/react/24/outline/QueueListIcon";
 import ChatBubbleLeftRightIcon from "@heroicons/react/24/outline/ChatBubbleLeftRightIcon";
 import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
 import UserGroupIcon from "@heroicons/react/24/outline/UserGroupIcon";
-import { VAPI_API_URL } from "../../../store";
+import { API_URL, VAPI_API_URL } from "../../../store";
 import { toast } from "react-toastify";
 function CreateAssistant() {
   const [assistantName, setAssistantName] = useState("");
   const [template, setTemplate] = useState("Blank");
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [assistantNameError, setAssistantNameError] = useState(false);
+  const [assistantId, setAssistantId] = useState("");
 
   useEffect(() => {
     console.log("template name", template);
@@ -249,6 +250,8 @@ function CreateAssistant() {
             console.log(result);
             toast.success("Assistant Created Successfull!");
             setAssistantName("");
+            setAssistantId(result.id);
+            sendUserAssistantId();
           }
         } catch (err) {
           console.error(err);
@@ -260,6 +263,25 @@ function CreateAssistant() {
       setAssistantNameError(true);
     }
   };
+
+  const sendUserAssistantId = async () => {
+    const userId = JSON.parse(localStorage.getItem("user")).id;
+    console.log("---------------:", userId);
+    const response = await fetch(
+      `${API_URL}api/users/add-assistant/${userId}?assistantId=${assistantId}`,
+      {
+        method: "PUT",
+      }
+    );
+    const result = await response.json();
+    console.log(result);
+  };
+
+  useEffect(() => {
+    console.log("-------------------");
+    console.log(assistantId);
+  }, [assistantId]);
+
   return (
     <div className="my-3">
       <h6 className="font-bold">Choose a template</h6>
