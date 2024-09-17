@@ -448,8 +448,8 @@ const Assistants = () => {
     assistantObj.analysisPlan.successEvaluationPrompt = successEvaluationPrompt;
     assistantObj.analysisPlan.successEvaluationRubric = successEvaluationRubric;
     assistantObj.analysisPlan.structuredDataPrompt = structuredDataPrompt;
-    console.log("Assistants Voice Provider: ", assistantVoiceProvider);
     assistantObj.voice.provider = assistantVoiceProvider;
+    console.log("Assistants Voice Provider: ", assistantObj.voice.provider);
     assistantObj.voice.voiceId = assistantVoiceId;
   }, [
     assistantObj,
@@ -522,10 +522,7 @@ const Assistants = () => {
       toast.error("Please enter your Forwarding number!!");
     } else if (modelProvider === null) {
       toast.error("Please enter Model Provider!!");
-    } else if (
-      assistantVoiceProvider !== "deepgram" ||
-      assistantVoiceProvider !== "openai"
-    ) {
+    } else if (!assistantVoiceProvider) {
       toast.error("Please enter Voice Provider!!");
     } else {
       setIsPublishUpdatedAssistant(true);
