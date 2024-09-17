@@ -9,22 +9,26 @@ function DeleteConfirmationModal({
   setIsDeleteAssistant,
   isDeleteModalOpen,
   assistantID,
+  setLoading,
 }) {
   const handleDeleteAssistant = async () => {
     try {
-      const response = await fetch(
-        `${ASSISTANTS_API_URL}/${assistantID}`,
-        DELETE_ASSISTANT_API_OPTIONS
-      );
+      const response = await fetch(`${ASSISTANTS_API_URL}/${assistantID}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer e39adb17-33cb-472b-87c2-97f7ee91139f`, //${process.env.VAPI_PRIVATE_KEY}
+        },
+      });
       const result = await response.json();
       if (result) {
         console.log("After deleting an Assistant: ", result);
-        toast.warning("Assistant Deleted Successfully");
       }
     } catch (err) {
       console.error(err);
     }
     setIsDeleteAssistant(false);
+    setLoading(true);
+    toast.warning("Assistant Deleted Successfully");
   };
 
   return (

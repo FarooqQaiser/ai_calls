@@ -25,6 +25,7 @@ import { LuTimerReset } from "react-icons/lu";
 import { TbRulerMeasure } from "react-icons/tb";
 import { IoTimerOutline } from "react-icons/io5";
 import { MdLineStyle } from "react-icons/md";
+import ArrowPathIcon from "@heroicons/react/24/outline/ArrowPathIcon";
 import {
   CCard,
   CCardBody,
@@ -62,6 +63,7 @@ import DeleteConfirmationModal from "../../components/Assistants Api/DeleteConfi
 import { toast } from "react-toastify";
 import PublishUpdatedAssistant from "../../components/Assistants Api/PublishUpdatedAssistant";
 import { dataStructure } from "../../components/Assistants Api/UpdatedDataStructure";
+import { useNavigate } from "react-router-dom";
 
 const Assistants = () => {
   const dispatch = useDispatch();
@@ -108,11 +110,13 @@ const Assistants = () => {
   const [successEvaluationPrompt, setSuccessEvaluationPrompt] = useState("");
   const [successEvaluationRubric, setSuccessEvaluationRubric] = useState("");
   const [structuredDataPrompt, setStructuredDataPrompt] = useState("");
+  const [assistantVoiceProvider, setAssistantVoiceProvider] = useState("");
+  const [assistantVoiceId, setAssistantVoiceId] = useState("");
   const [country, setCountry] = useState(null);
   const [isDeleteAssistant, setIsDeleteAssistant] = useState(false);
   const [isCurrentAssistantDataLoading, setIsCurrentAssistantDataLoading] =
     useState(false);
-  const [isSelected, setIsSelected] = useState(false);
+  const [isSelected, setIsSelected] = useState(0);
   const [isPublishUpdatedAssistant, setIsPublishUpdatedAssistant] =
     useState(false);
   const [assistantObj, setAssistantObj] = useState(dataStructure);
@@ -249,52 +253,93 @@ const Assistants = () => {
 
   const transcriberLanguages = ["en", "zh", "de", "es"];
 
+  const VOICE_PROVIDERS = ["deepgram", "openai"];
+
+  const VOICE_ID = [
+    {
+      model: [
+        "angus",
+        "helios",
+        "stella",
+        "athena",
+        "zeus",
+        "hera",
+        "orpheus",
+        "luna",
+        "perseus",
+        "orion",
+        "asteria",
+        "arcas",
+      ],
+    },
+    {
+      model: ["nova", "onyx", "echo", "alloy", "fable", "shimmer"],
+    },
+  ];
+
+  const navigate = useNavigate();
+
   useEffect(() => {
-    let result = null;
+    const getToken = localStorage.getItem("token");
+    // if (getToken) {
+    //   getAllUsers()
+    //   getAllGroupNames()
+    //   setToken(getToken)
+    // }
+    if (!getToken) {
+      navigate("/login");
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    let interval;
+
     const fetchAssistants = async () => {
       try {
-        // const response = await fetch(
-        //   ASSISTANTS_API_URL,
-        //   ASSISTANTS_API_OPTIONS
-        // );
         const response = await fetch(
           API_URL + `api/users/get-users-assistant/${user.id}`,
           {
             method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
           }
         );
-        result = await response.json();
-        console.log("All Assistants: ", result);
+        const result = await response.json();
+        // console.log("All Assistants: ", result);
 
-        if (result) {
+        if (result.length > 0) {
           setAssistants(result);
           setAssistantId(result[0].id);
+          setLoading(false);
+          setNoAssistant(false);
+        } else {
+          setLoading(false);
+          setNoAssistant(true);
+          // toast.error("No Assistants found!!");
         }
-        //  else {
-        //   setLoading(false);
-        //   setNoAssistant(true);
-        //   toast.error("No Assistants found!!");
-        // }
       } catch (err) {
         console.error(err);
       }
     };
+
     fetchAssistants();
-  }, [user.id]);
-  console.log("This is user: ", user);
+
+    if (noAssistant) {
+      interval = setInterval(() => {
+        fetchAssistants();
+      }, 1000); // 3 seconds
+    }
+    return () => clearInterval(interval);
+  }, [loading, noAssistant, user.id]);
 
   useEffect(() => {
     let result = null;
+    setForwadingNumber(0);
 
     const getAssistant = async () => {
       try {
         const options = {
           method: "GET",
           headers: {
-            Authorization: "Bearer 32ce8935-a261-4732-a3af-d2cd6eaecdfb",
+            Authorization: `Bearer e39adb17-33cb-472b-87c2-97f7ee91139f`, //${process.env.VAPI_PRIVATE_KEY}
           },
         };
         const response = await fetch(
@@ -308,7 +353,6 @@ const Assistants = () => {
       }
 
       if (result) {
-        setLoading(false);
         setIsCurrentAssistantDataLoading(false);
         setNoAssistant(false);
         setCurrentAssistant(result);
@@ -362,6 +406,8 @@ const Assistants = () => {
             )
           );
         }
+        setAssistantVoiceProvider(result.voice.provider);
+        setAssistantVoiceId(result.voice.voiceId);
       }
     };
     if (assistantId) {
@@ -384,7 +430,7 @@ const Assistants = () => {
     assistantObj.endCallFunctionEnabled = enableEndCallFunction;
     assistantObj.dialKeypadFunctionEnabled = enableDialKeypad;
     assistantObj.endCallPhrases = endCallPhrases;
-    assistantObj.forwardingPhoneNumber = forwadingNumber;
+    assistantObj.forwardingPhoneNumber = isSelected + forwadingNumber;
     assistantObj.hipaaEnabled = enableHIPAA;
     assistantObj.recordingEnabled = enableAudioRecording;
     assistantObj.artifactPlan.videoRecordingEnabled = enableVideoRecording;
@@ -402,9 +448,14 @@ const Assistants = () => {
     assistantObj.analysisPlan.successEvaluationPrompt = successEvaluationPrompt;
     assistantObj.analysisPlan.successEvaluationRubric = successEvaluationRubric;
     assistantObj.analysisPlan.structuredDataPrompt = structuredDataPrompt;
+    console.log("Assistants Voice Provider: ", assistantVoiceProvider);
+    assistantObj.voice.provider = assistantVoiceProvider;
+    assistantObj.voice.voiceId = assistantVoiceId;
   }, [
     assistantObj,
     currentAssistant.name,
+    assistantVoiceId,
+    assistantVoiceProvider,
     temperature,
     firstMessage,
     systemPrompt,
@@ -418,6 +469,7 @@ const Assistants = () => {
     enableEndCallFunction,
     enableDialKeypad,
     endCallPhrases,
+    isSelected,
     forwadingNumber,
     enableHIPAA,
     enableAudioRecording,
@@ -457,7 +509,7 @@ const Assistants = () => {
     if (assistant) {
       setAssistantId(assistant.id);
     } else {
-      console.log("Assistant not found");
+      toast.error("Assistant not found");
     }
   };
 
@@ -466,8 +518,19 @@ const Assistants = () => {
   };
 
   const handlePublishButton = () => {
-    setIsPublishUpdatedAssistant(true);
-    console.log(assistantObj);
+    if (forwadingNumber === 0) {
+      toast.error("Please enter your Forwarding number!!");
+    } else if (modelProvider === null) {
+      toast.error("Please enter Model Provider!!");
+    } else if (
+      assistantVoiceProvider !== "deepgram" ||
+      assistantVoiceProvider !== "openai"
+    ) {
+      toast.error("Please enter Voice Provider!!");
+    } else {
+      setIsPublishUpdatedAssistant(true);
+    }
+    // console.log(assistantObj);
   };
 
   return (
@@ -481,7 +544,7 @@ const Assistants = () => {
       ) : (
         <>
           {noAssistant && (
-            <div className="h-screen flex justify-center items-center">
+            <div className="h-screen flex gap-10 justify-center items-center">
               <button
                 type="button"
                 onClick={() => openNotification()}
@@ -490,6 +553,13 @@ const Assistants = () => {
                 Create Assistant
                 <PlusICon className="w-5 h-5 ml-3" />
               </button>
+              {/* <button
+                className="text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8]"
+                onClick={() => setLoading(true)}
+              >
+                <ArrowPathIcon className="w-4 mr-2" />
+                Refresh Data
+              </button> */}
             </div>
           )}
           {!noAssistant && (
@@ -498,7 +568,7 @@ const Assistants = () => {
                 data-testid="assistant-menu"
                 className="border-r border-border hide-scrollbar sm:h-full w-full sm:max-w-[320px]"
               >
-                <div className="flex p-4 fixed w-full z-10 sm:w-[320px] bg-foreground/5 backdrop-blur-sm">
+                <div className="flex p-4 fixed z-10 sm:w-[320px] bg-foreground/5 backdrop-blur-sm">
                   {" "}
                   {/*sm:backdrop-blur-sm */}
                   <button
@@ -513,10 +583,9 @@ const Assistants = () => {
                 <div
                   role="list"
                   data-testid="assistants-list"
-                  className="mt-16 flex-col w-full h-[250px] overflow-y-scroll sm:overflow-hidden sm:h-full sm:w-[320px] p-4 gap-y-2 sm:flex"
+                  className="mt-16 flex flex-col w-full max-h-[250px] overflow-y-scroll sm:overflow-y-auto sm:max-h-full sm:w-[320px] p-4 gap-y-2 sm:flex"
                 >
-                  {assistants &&
-                    assistants.length > 0 &&
+                  {assistants.length > 0 &&
                     assistants.map((assistant, index) => (
                       <div
                         key={index}
@@ -555,6 +624,15 @@ const Assistants = () => {
                         {currentAssistant.name
                           ? currentAssistant.name
                           : "Assistant"}
+                      </div>
+                      <div className="flex justify-end sm:w-[320px] bg-foreground/5 backdrop-blur-sm">
+                        <button
+                          className="text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8]"
+                          onClick={() => setLoading(true)}
+                        >
+                          <ArrowPathIcon className="w-4 mr-2" />
+                          Refresh Data
+                        </button>
                       </div>
                       {/* <div>
                         <button
@@ -813,6 +891,7 @@ const Assistants = () => {
                           setIsDeleteAssistant={setIsDeleteAssistant}
                           isDeleteModalOpen={isDeleteAssistant}
                           assistantID={currentAssistant.id}
+                          setLoading={setLoading}
                         />
                       </>
                     )}
@@ -971,7 +1050,7 @@ const Assistants = () => {
                                       })}
                                     </CFormSelect>
                                   </div>
-                                  <div>
+                                  {/* <div>
                                     <label className="mb-1 text-sm font-medium text-gray-900 dark:text-white">
                                       Knowledge base
                                     </label>
@@ -999,7 +1078,7 @@ const Assistants = () => {
                                         Three
                                       </option>
                                     </CFormSelect>
-                                  </div>
+                                  </div> */}
                                   <div>
                                     <div className="flex justify-between items-center">
                                       <label className="mb-1 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
@@ -1337,71 +1416,134 @@ const Assistants = () => {
                                     <label className="mb-1 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                                       Provider
                                     </label>
-                                    <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]">
-                                      <option className="bg-[#F2F2F2] dark:bg-[#191E24]">
-                                        Open this select menu
-                                      </option>
-                                      <option
-                                        className="bg-[#F2F2F2] dark:bg-[#191E24]"
-                                        value="1"
-                                      >
-                                        One
-                                      </option>
-                                      <option
-                                        className="bg-[#F2F2F2] dark:bg-[#191E24]"
-                                        value="2"
-                                      >
-                                        Two
-                                      </option>
-                                      <option
-                                        className="bg-[#F2F2F2] dark:bg-[#191E24]"
-                                        value="3"
-                                        disabled
-                                      >
-                                        Three
-                                      </option>
+                                    <CFormSelect
+                                      className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]"
+                                      onChange={(e) =>
+                                        setAssistantVoiceProvider(
+                                          e.target.value
+                                        )
+                                      }
+                                    >
+                                      {VOICE_PROVIDERS.map(
+                                        (voiceProvider, index) => {
+                                          if (
+                                            voiceProvider ===
+                                            assistantVoiceProvider
+                                          ) {
+                                            return (
+                                              <>
+                                                <option
+                                                  key={index}
+                                                  value={voiceProvider}
+                                                  selected
+                                                >
+                                                  {voiceProvider}
+                                                </option>
+                                              </>
+                                            );
+                                          }
+                                          return (
+                                            <>
+                                              <option
+                                                key={index}
+                                                value={voiceProvider}
+                                              >
+                                                {voiceProvider}
+                                              </option>
+                                            </>
+                                          );
+                                        }
+                                      )}
                                     </CFormSelect>
                                   </div>
                                   <div>
                                     <label className="mb-1 text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                                       Voice
                                     </label>
-                                    <CFormSelect className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]">
-                                      <option className="bg-[#F2F2F2] dark:bg-[#191E24]">
-                                        Open this select menu
-                                      </option>
-                                      <option
-                                        className="bg-[#F2F2F2] dark:bg-[#191E24]"
-                                        value="1"
-                                      >
-                                        One
-                                      </option>
-                                      <option
-                                        className="bg-[#F2F2F2] dark:bg-[#191E24]"
-                                        value="2"
-                                      >
-                                        Two
-                                      </option>
-                                      <option
-                                        className="bg-[#F2F2F2] dark:bg-[#191E24]"
-                                        value="3"
-                                        disabled
-                                      >
-                                        Three
-                                      </option>
+                                    <CFormSelect
+                                      className="text-sm rounded-lg block w-full p-2.5 mb-2 cursor-pointer bg-[#F2F2F2] dark:bg-[#191E24]"
+                                      onChange={(e) =>
+                                        setAssistantVoiceId(e.target.value)
+                                      }
+                                    >
+                                      {assistantVoiceProvider === "deepgram" ? (
+                                        <>
+                                          {VOICE_ID[0].model.map(
+                                            (voiceId, index) => {
+                                              if (
+                                                voiceId === assistantVoiceId
+                                              ) {
+                                                return (
+                                                  <>
+                                                    <option
+                                                      key={index}
+                                                      value={voiceId}
+                                                      selected
+                                                    >
+                                                      {voiceId}
+                                                    </option>
+                                                  </>
+                                                );
+                                              }
+                                              return (
+                                                <>
+                                                  <option
+                                                    key={index}
+                                                    value={voiceId}
+                                                  >
+                                                    {voiceId}
+                                                  </option>
+                                                </>
+                                              );
+                                            }
+                                          )}
+                                        </>
+                                      ) : (
+                                        <>
+                                          {VOICE_ID[1].model.map(
+                                            (voiceId, index) => {
+                                              if (
+                                                voiceId === assistantVoiceId
+                                              ) {
+                                                return (
+                                                  <>
+                                                    <option
+                                                      key={index}
+                                                      value={voiceId}
+                                                      selected
+                                                    >
+                                                      {voiceId}
+                                                    </option>
+                                                  </>
+                                                );
+                                              }
+                                              return (
+                                                <>
+                                                  <option
+                                                    key={index}
+                                                    value={voiceId}
+                                                  >
+                                                    {voiceId}
+                                                  </option>
+                                                </>
+                                              );
+                                            }
+                                          )}
+                                        </>
+                                      )}
                                     </CFormSelect>
                                   </div>
                                 </div>
-                                <div>
+                                {/* <div>
                                   <CFormCheck
                                     id="flexCheckChecked"
                                     label="Add Voice ID Manually"
                                   />
-                                </div>
+                                </div> */}
                               </div>
                             </CCardBody>
                           </CCard>
-                          <CCard className="mt-5">
+                          {/* <CCard className="mt-5">
                             <CCardBody className="bg-background/80">
                               <h1 className="font-extrabold">
                                 Additional Configuration
@@ -1573,7 +1715,7 @@ const Assistants = () => {
                                 </div>
                               </div>
                             </CCardBody>
-                          </CCard>
+                          </CCard> */}
                         </CTabPane>
                       )}
                       {activeKey === "functions" && (
@@ -1707,6 +1849,7 @@ const Assistants = () => {
                                           );
                                         number.value = 0;
                                         setIsSelected(e.target.value);
+                                        console.log(isSelected);
                                       }}
                                     >
                                       <option
@@ -1740,8 +1883,8 @@ const Assistants = () => {
                                         const numericValue = input.replace(
                                           /[^0-9]/g,
                                           ""
-                                        ); // Remove non-numeric characters
-                                        setForwadingNumber(numericValue); // Set the cleaned numeric value
+                                        );
+                                        setForwadingNumber(numericValue);
                                       }}
                                     />
                                   </div>
@@ -1761,9 +1904,13 @@ const Assistants = () => {
                                     placeholder="Phrases that if spoken by the bot will end the call.Eg: goodbye"
                                     className="text-sm rounded-lg block w-full p-2.5 mb-2 bg-[#F2F2F2] dark:bg-[#191E24]"
                                     type="text"
-                                    value={endCallPhrases.map((phrase) => {
-                                      return phrase;
-                                    })}
+                                    value={
+                                      endCallPhrases
+                                        ? endCallPhrases.map((phrase) => {
+                                            return phrase;
+                                          })
+                                        : ""
+                                    }
                                     onChange={(e) =>
                                       setEndCallPhrases([e.target.value])
                                     }
@@ -1772,7 +1919,7 @@ const Assistants = () => {
                               </div>
                             </CCardBody>
                           </CCard>
-                          <CCard>
+                          {/* <CCard>
                             <CCardBody className="bg-background/80">
                               <h1 className="font-extrabold">
                                 Custom Functions
@@ -1789,11 +1936,11 @@ const Assistants = () => {
                               >
                                 Note: Functions are the same as tools, except
                                 they follow older syntax as per the OpenAI Spec.
-                                {/*Check our{" "}
+                                Check our{" "}
                                 <a href="/" className="font-semibold underline">
                                   functions guide
                                 </a>{" "}
-                                for more details*/}
+                                for more details
                               </div>
                               <button
                                 type="button"
@@ -1804,7 +1951,7 @@ const Assistants = () => {
                                 <PlusICon className="w-5 h-5 ml-3" />
                               </button>
                             </CCardBody>
-                          </CCard>
+                          </CCard> */}
                         </CTabPane>
                       )}
                       {activeKey === "advanced" && (
@@ -2116,7 +2263,7 @@ const Assistants = () => {
                                 to and from the assistant.
                               </p>
                               <div className="p-3 mt-3">
-                                <div>
+                                {/* <div>
                                   <label className="text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                                     Server Url
                                   </label>
@@ -2130,7 +2277,7 @@ const Assistants = () => {
                                     className="text-sm rounded-lg block w-full p-2.5 my-2 bg-[#F2F2F2] dark:bg-[#191E24]"
                                     placeholder="Endpoint URL to handle Server messages"
                                   />
-                                </div>
+                                </div> */}
                                 <div className="mt-3">
                                   <label className="text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                                     Client Messages
@@ -2173,7 +2320,7 @@ const Assistants = () => {
                                     className="text-sm rounded-lg block w-full my-2 bg-[#F2F2F2] dark:bg-[#191E24]"
                                   />
                                 </div>
-                                <div className="mt-3">
+                                {/* <div className="mt-3">
                                   <label className="text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                                     Server Messages
                                   </label>
@@ -2193,7 +2340,7 @@ const Assistants = () => {
                                     placeholder="Select Server Messages"
                                     className="text-sm rounded-lg block w-full my-2 bg-[#F2F2F2] dark:bg-[#191E24]"
                                   />
-                                </div>
+                                </div> */}
                                 <div className="my-2">
                                   <label className="text-sm font-medium text-gray-900 dark:text-white flex justify-start items-center">
                                     Voicemail Message
@@ -2467,7 +2614,7 @@ const Assistants = () => {
                               </div>
                             </CCardBody>
                           </CCard>
-                          <CCard className="mt-5">
+                          {/* <CCard className="mt-5">
                             <CCardBody className="bg-background/80">
                               <h1 className="font-extrabold">
                                 Structured Data
@@ -2543,7 +2690,7 @@ const Assistants = () => {
                                 </div>
                               </div>
                             </CCardBody>
-                          </CCard>
+                          </CCard> */}
                         </CTabPane>
                       )}
                     </CTabContent>

@@ -34,20 +34,27 @@ function LeftSidebar() {
         </button>
 
         <li className="mb-2 font-semibold text-xl">
-          <Link className="justify-between" onClick={handleWidth}>
-            {sidebarWidth === 240 && (
-              <div className="flex-row flex items-center gap-3">
-                <div className="bg-[#5D17EB] p-2 rounded-xl text-white">AC</div>
-                <span>AI Caller</span>
-              </div>
-            )}
-            <div
-              className={`flex justify-center items-center ${
-                sidebarWidth === 240 ? "" : "px-1 py-2 "
-              }`}
+          <Link className="w-full">
+            <button
+              className="w-full flex items-center justify-between gap-10 disable pointer-events-none lg:pointer-events-auto"
+              onClick={handleWidth}
             >
-              <FaBars className="text-xl" />
-            </div>
+              {sidebarWidth === 240 && (
+                <div className="flex-row flex items-center gap-3">
+                  <div className="bg-[#5D17EB] p-2 rounded-xl text-white">
+                    AC
+                  </div>
+                  <span>AI Caller</span>
+                </div>
+              )}
+              <div
+                className={`flex justify-center items-center ${
+                  sidebarWidth === 240 ? "" : "px-1 py-2 "
+                }`}
+              >
+                <FaBars className="text-xl" />
+              </div>
+            </button>
           </Link>
         </li>
         {routes.map((route, k) => (
