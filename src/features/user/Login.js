@@ -51,7 +51,6 @@ function Login() {
       }
 
       const { token, user } = data;
-      console.log("token: ", token);
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
       const storedUser = JSON.parse(localStorage.getItem("user"));
