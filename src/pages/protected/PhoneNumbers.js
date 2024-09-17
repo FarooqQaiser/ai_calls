@@ -11,6 +11,7 @@ import { CCard, CCardBody, CFormSelect } from "@coreui/react";
 import { IoCopy } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { VAPI_API_URL } from "../../store";
+import { useNavigate } from "react-router-dom";
 
 const PhoneNumbers = () => {
   const dispatch = useDispatch();
@@ -19,6 +20,19 @@ const PhoneNumbers = () => {
   const [currentPhoneNumber, setCurrentPhoneNumber] = useState({});
   const [phoneNumberId, setPhoneNumberId] = useState("");
   const [phoneNumbers, setPhoneNumbers] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const getToken = localStorage.getItem("token");
+    // if (getToken) {
+    //   getAllUsers()
+    //   getAllGroupNames()
+    //   setToken(getToken)
+    // }
+    if (!getToken) {
+      navigate("/login");
+    }
+  }, [navigate]);
 
   useEffect(() => {
     setCurrentPhoneNumber(

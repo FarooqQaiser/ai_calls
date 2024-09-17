@@ -30,7 +30,7 @@ function Layout() {
   return (
     <>
       {/* Left drawer - containing page content and side bar (always open) */}
-      <div className="drawer h-screen 2xl:drawer-open">
+      <div className="drawer h-screen lg:drawer-open">
         <input
           id="left-sidebar-drawer"
           type="checkbox"

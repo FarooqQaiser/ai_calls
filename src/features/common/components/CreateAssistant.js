@@ -7,23 +7,23 @@ import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
 import UserGroupIcon from "@heroicons/react/24/outline/UserGroupIcon";
 import { API_URL, VAPI_API_URL } from "../../../store";
 import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
+import { closeRightDrawer, reloadPage } from "../rightDrawerSlice";
+import { useNavigate } from "react-router-dom";
+import { createSlice } from "@reduxjs/toolkit";
+
 function CreateAssistant() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [assistantName, setAssistantName] = useState("");
   const [template, setTemplate] = useState("Blank");
-  const [token, setToken] = useState(localStorage.getItem("token"));
   const [assistantNameError, setAssistantNameError] = useState(false);
-  const [assistantId, setAssistantId] = useState("");
+  // const [assistantId, setAssistantId] = useState(null);
 
   useEffect(() => {
     console.log("template name", template);
   }, [template]);
-
-  useEffect(() => {
-    const getToken = localStorage.getItem("token");
-    if (getToken) {
-      setToken(getToken);
-    }
-  }, []);
 
   // const payload = {
   //   orgId: process.env.REACT_APP_ORG_ID,
@@ -41,7 +41,7 @@ function CreateAssistant() {
   // const token = generateJWT(payload, key, options);
 
   const createAssistant = () => {
-    console.log(assistantName, template);
+    // console.log(assistantName, template);
     // const raw = JSON.stringify({
     //   transcriber: {
     //     provider: "deepgram",
@@ -236,7 +236,7 @@ function CreateAssistant() {
       const options = {
         method: "POST",
         headers: {
-          Authorization: `Bearer 32ce8935-a261-4732-a3af-d2cd6eaecdfb`,
+          Authorization: `Bearer e39adb17-33cb-472b-87c2-97f7ee91139f`, //${process.env.VAPI_PRIVATE_KEY}
           "Content-Type": "application/json",
         },
         body: raw,
@@ -248,10 +248,14 @@ function CreateAssistant() {
           const result = await response.json();
           if (result) {
             console.log(result);
-            toast.success("Assistant Created Successfull!");
             setAssistantName("");
-            setAssistantId(result.id);
-            sendUserAssistantId();
+            toast.success("Assistant Created Successfull!");
+            sendUserAssistantId(result.id);
+            dispatch(
+              closeRightDrawer({
+                isOpen: false,
+              })
+            );
           }
         } catch (err) {
           console.error(err);
@@ -264,23 +268,49 @@ function CreateAssistant() {
     }
   };
 
-  const sendUserAssistantId = async () => {
+  const sendUserAssistantId = async (assistantId) => {
     const userId = JSON.parse(localStorage.getItem("user")).id;
-    console.log("---------------:", userId);
-    const response = await fetch(
-      `${API_URL}api/users/add-assistant/${userId}?assistantId=${assistantId}`,
-      {
-        method: "PUT",
+    // console.log("User ID:", userId);
+
+    // const response = await fetch(
+    //   `${API_URL}api/users/add-assistant/${userId}`,
+    //   {
+    //     method: "PUT",
+    //     body: assistantId,
+    //   }
+    // );
+
+    if (assistantId !== null) {
+      try {
+        const response = await fetch(
+          `${API_URL}api/users/add-assistant/${userId}`,
+          {
+            method: "PUT",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              assistantId: assistantId,
+            }),
+          }
+        );
+        const result = await response.json();
+        // if (result) {
+        //   window.location.reload();
+        // }
+        // console.log("Result: ", result);
+      } catch (err) {
+        console.error(err);
       }
-    );
-    const result = await response.json();
-    console.log(result);
+    }
   };
 
-  useEffect(() => {
-    console.log("-------------------");
-    console.log(assistantId);
-  }, [assistantId]);
+  // useEffect(() => {
+  //   // console.log("Assistant ID: ", assistantId);
+  //   // console.log("++++++++++++");
+  //   sendUserAssistantId();
+  // }, [assistantId]);
 
   return (
     <div className="my-3">

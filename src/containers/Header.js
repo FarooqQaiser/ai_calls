@@ -56,6 +56,7 @@ function Header() {
 
   function logoutUser() {
     const storedUser = JSON.parse(localStorage.getItem("user"));
+    console.log("User: ", storedUser);
     const userName = storedUser?.firstName;
     toast.success(`GoodBye ${userName}`, {
       position: "top-right",
@@ -79,7 +80,7 @@ function Header() {
         <div className="flex-1">
           <label
             htmlFor="left-sidebar-drawer"
-            className="btn btn-primary drawer-button 2xl:hidden"
+            className="btn btn-primary drawer-button lg:hidden"
           >
             <Bars3Icon className="h-5 inline-block w-5" />
           </label>

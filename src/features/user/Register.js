@@ -125,8 +125,8 @@ function Register() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: userId,
           verificationToken: combinedValue,
+          userId: userId,
         }),
       });
       const data = await response.json();

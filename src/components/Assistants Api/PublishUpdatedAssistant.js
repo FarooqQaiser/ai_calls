@@ -10,26 +10,91 @@ export default function PublishUpdatedAssistant({
 }) {
   const handleupdateAssistant = () => {
     console.log(assistantObj);
-    const stringObj = JSON.stringify(assistantObj);
+    const provider = assistantObj.transcriber.provider;
+    console.log(provider);
     const updateAssistant = async () => {
       try {
         const options = {
           method: "PATCH",
           headers: {
-            Authorization: "Bearer 32ce8935-a261-4732-a3af-d2cd6eaecdfb",
+            Authorization: `Bearer e39adb17-33cb-472b-87c2-97f7ee91139f`, //${process.env.VAPI_PRIVATE_KEY}
             "Content-Type": "application/json",
           },
-          body: `${stringObj}`,
+          body: JSON.stringify({
+            transcriber: {
+              provider: "deepgram",
+              model: assistantObj.transcriber.model,
+              language: assistantObj.transcriber.language,
+              smartFormat: true,
+              keywords: ["Vapi:2", "assistant"],
+            },
+            model: {
+              provider: assistantObj.model.provider,
+              model: assistantObj.model.model,
+              messages: [
+                {
+                  role: assistantObj.model.messages[0].role,
+                  content: assistantObj.model.messages[0].content,
+                },
+              ],
+              tools: [
+                {
+                  type: assistantObj.model.tools[0].type,
+                  messages: [
+                    {
+                      type: "request-start",
+                      content: "Checking the information. Please wait...",
+                    },
+                    {
+                      type: "request-complete",
+                      content: "I've found the information you requested.",
+                    },
+                    {
+                      type: "request-failed",
+                      content:
+                        "I'm sorry, I couldn't retrieve the information at this time.",
+                    },
+                  ],
+                  function: {
+                    name: "get_info",
+                    parameters: {
+                      type: assistantObj.model.tools[0].function.parameters
+                        .type,
+                      properties: {
+                        query: {
+                          type: "string",
+                        },
+                      },
+                    },
+                    description:
+                      assistantObj.model.tools[0].function.description,
+                  },
+                  async: assistantObj.model.tools[0].async,
+                  server: {
+                    url: "https://your-api-endpoint.com/get-info",
+                  },
+                },
+              ],
+            },
+            voice: {
+              voiceId: assistantObj.voice.voiceId,
+              provider: assistantObj.voice.provider,
+            },
+            firstMessage: assistantObj.firstMessage,
+            recordingEnabled: assistantObj.recordingEnabled,
+            serverUrl: "https://your-server-url.com/webhook",
+            forwardingPhoneNumber: assistantObj.forwardingPhoneNumber,
+          }),
         };
 
         const response = await fetch(
           `https://api.vapi.ai/assistant/${assistantId}`,
           options
         );
-        const result = await response.json();
-        console.log(result);
+        // const result = await response.json();
+        // console.log(result);
 
-        if (result.ok) {
+        if (response.ok) {
           toast.success("Assistant Updated!!");
           setIsPublishUpdatedAssistant(false);
         }
@@ -98,3 +163,93 @@ export default function PublishUpdatedAssistant({
     </>
   );
 }
+
+// const Squads = () => {
+//     const handleEdit = () => {
+//   const options = {
+//     method: "PATCH",
+//     headers: {
+//       Authorization: "Bearer 32ce8935-a261-4732-a3af-d2cd6eaecdfb",
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify({
+//       "transcriber": {
+//         "provider": "deepgram",
+//         "model": "nova-2",
+//         "language": "en",
+//         "smartFormat": true,
+//         "keywords": ["Vapi:2", "assistant:1.5"]
+//       },
+//       "model": {
+//         "provider": "openai",
+//         "model": "gpt-4",
+//         "messages": [
+//           {
+//             "role": "system",
+//             "content": "You're a technical support assistant for Vapi."
+//           }
+//         ],
+//         "tools": [
+//           {
+//             "type": "function",
+//             "messages": [
+//               {
+//                 "type": "request-start",
+//                 "content": "Checking the information. Please wait..."
+//               },
+//               {
+//                 "type": "request-complete",
+//                 "content": "I've found the information you requested."
+//               },
+//               {
+//                 "type": "request-failed",
+//                 "content": "I'm sorry, I couldn't retrieve the information at this time."
+//               }
+//             ],
+//             "function": {
+//               "name": "get_info",
+//               "parameters": {
+//                 "type": "object",
+//                 "properties": {
+//                   "query": {
+//                     "type": "string"
+//                   }
+//                 }
+//               },
+//               "description": "Retrieves information based on the user's query."
+//             },
+//             "async": false,
+//             "server": {
+//               "url": "https://your-api-endpoint.com/get-info"
+//             }
+//           }
+//         ]
+//       },
+//       "voice": {
+//         "voiceId": "emma",
+//         "provider": "azure"
+//       },
+//       "firstMessage": "Hello, I'm an AI assistant for Vapi. How can I help you today?",
+//       "recordingEnabled": true,
+//       "serverUrl": "https://your-server-url.com/webhook",
+//       "forwardingPhoneNumber": "+11234567890"
+//     })
+
+//   };
+
+//       fetch(
+//         "https://api.vapi.ai/assistant/4d96f340-bf16-41f0-a9c4-1022d913d7e5",
+//         options
+//       )
+//         .then((response) => response.json())
+//         .then((response) => console.log(response))
+//         .catch((err) => console.error(err));
+//     };
+//     return (
+//       <div>
+//         <button onClick={handleEdit}>Edit Squad</button>
+//       </div>
+//     );
+//   };
+
+//   export default Squads;
