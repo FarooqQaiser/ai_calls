@@ -10,16 +10,18 @@ import { setPageTitle } from "../../features/common/headerSlice";
 import { CCard, CCardBody, CFormSelect } from "@coreui/react";
 import { IoCopy } from "react-icons/io5";
 import { toast } from "react-toastify";
-import { VAPI_API_URL } from "../../store";
+import { API_URL, VAPI_API_URL } from "../../store";
 import { useNavigate } from "react-router-dom";
+import { phoneNumberDataPayload } from "../../components/Phone Numbers/DataPayload";
 
 const PhoneNumbers = () => {
   const dispatch = useDispatch();
   // const [showImport, setShowImport] = useState(true);
-  const [showPhoneNoDetail, setShowPhoneNoDetail] = useState(true);
+  const [showPhoneNoDetail, setShowPhoneNoDetail] = useState(false);
   const [currentPhoneNumber, setCurrentPhoneNumber] = useState({});
   const [phoneNumberId, setPhoneNumberId] = useState("");
   const [phoneNumbers, setPhoneNumbers] = useState([]);
+  const [assistants, setAssistants] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,18 +38,63 @@ const PhoneNumbers = () => {
 
   useEffect(() => {
     setCurrentPhoneNumber(
-      phoneNumbers.filter((no) => no.id == phoneNumberId)[0]
+      phoneNumbers.filter((no) => no.id === phoneNumberId)[0]
     );
   }, [phoneNumberId]);
 
-  useEffect(() => {
-    dispatch(setPageTitle({ title: "Phone Numbers" }));
-    getPhoneNumbers();
-  }, []);
+  const fetchPhoneNumbers = async () => {
+    let result = null;
+    try {
+      const options = {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer e39adb17-33cb-472b-87c2-97f7ee91139f",
+        },
+      };
+      const response = await fetch("https://api.vapi.ai/phone-number", options);
+      result = await response.json();
+      if (response.ok) {
+        if (result) {
+          setPhoneNumbers(result);
+          console.log("Result: ", result);
+          setCurrentPhoneNumber(result[0]);
+          setPhoneNumberId(result[0].id);
+          setShowPhoneNoDetail(true);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchAssistants = async () => {
+    let result = null;
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    try {
+      const response = await fetch(
+        API_URL + `api/users/get-users-assistant/${user.id}`,
+        {
+          method: "GET",
+        }
+      );
+      result = await response.json();
+      if (response.ok) {
+        if (result) {
+          setAssistants(result);
+          console.log("Assistants: ", result);
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   useEffect(() => {
-    console.log("showPhoneNoDetail changed");
-  }, [showPhoneNoDetail]);
+    dispatch(setPageTitle({ title: "Phone Numbers" }));
+    fetchPhoneNumbers();
+    fetchAssistants();
+  }, [dispatch]);
 
   const openImportNumberModal = () => {
     dispatch(
@@ -65,99 +112,50 @@ const PhoneNumbers = () => {
       toast.success(`Copied to Clipboard`);
     }
   };
-  const getPhoneNumbers = () => {
-    const myHeaders = new Headers();
-    myHeaders.append("Authorization", `Bearer ${process.env.REACT_APP_TOKEN}`);
+  // const getPhoneNumbers = () => {
+  //   const myHeaders = new Headers();
+  //   myHeaders.append("Authorization", `Bearer ${process.env.REACT_APP_TOKEN}`);
 
-    const requestOptions = {
-      method: "GET",
-      headers: myHeaders,
-      redirect: "follow",
-    };
+  //   const requestOptions = {
+  //     method: "GET",
+  //     headers: myHeaders,
+  //     redirect: "follow",
+  //   };
 
-    fetch(VAPI_API_URL + "phone-number", requestOptions)
-      .then((response) => response.json())
-      .then((result) => {
-        console.log("phone numbers", result);
-        setPhoneNumbers(result);
-        setCurrentPhoneNumber(result[0]);
-        setPhoneNumberId(result[0].id);
-      })
-      .catch((error) => console.error(error));
-  };
+  //   fetch(VAPI_API_URL + "phone-number", requestOptions)
+  //     .then((response) => response.json())
+  //     .then((result) => {
+  //       console.log("phone numbers", result);
+  //       setPhoneNumbers(result);
+  //       setCurrentPhoneNumber(result[0]);
+  //       setPhoneNumberId(result[0].id);
+  //     })
+  //     .catch((error) => console.error(error));
+  // };
   return (
     <>
-      {!showPhoneNoDetail && (
-        <div className="h-screen flex flex-col justify-center items-center relative z-0">
-          <div class="flex justify-center items-center w-[330px]">
-            <div class="text-left text-muted-foreground will-change-auto">
-              <div
-                class="flex justify-left will-change-auto transform-none"
-                style={{ opacity: "1", filter: "blur(0px)" }}
-              >
-                <FaMobileRetro className="w-16 h-16" />
-              </div>
-              <h2
-                class="text-xl font-medium text-text will-change-auto transform-none"
-                style={{ opacity: "1", filter: "blur(0px)" }}
-              >
-                Phone Numbers
-              </h2>
-              <p
-                class="text-md text-text/40 mb-4 will-change-auto transform-none"
-                style={{ opacity: "1", filter: "blur(0px)" }}
-              >
-                Assistants are able to be connected to phone numbers for calls.{" "}
-              </p>
-              <p
-                class="text-md text-text/40 will-change-auto transform-none"
-                style={{ opacity: "1", filter: "blur(0px)" }}
-              >
-                You can import from Twilio, vonage, or by one directly from Vapi
-                for use with your assistants.{" "}
-              </p>
-            </div>
-          </div>
-          <div className="flex justify-start items-center my-3 ml-28">
-            <button
-              type="button"
-              disabled
-              className="w-auto mr-3 opacity-50 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-            >
-              Buy Number
-              <PlusICon className="w-5 h-5 ml-3" />
-            </button>
-            <button
-              type="button"
-              onClick={() => openImportNumberModal()}
-              className="w-auto mr-3 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-            >
-              Import
-              <PlusICon className="w-5 h-5 ml-3" />
-            </button>
-            <button
-              type="button"
-              className="w-auto mr-3 bg-background focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center"
-            >
-              Documentation
-            </button>
-          </div>
-          <div
-            class="flex items-center p-3 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
-            role="alert"
-          >
-            <LuAlertTriangle className="w-5 h-5 text-yellow-600 mr-3" />
-            <div>
-              Please add{" "}
-              <a href="/" className="hover:underline">
-                card detail
-              </a>{" "}
-              to buy a number
-            </div>
-          </div>
-        </div>
-      )}
-      {showPhoneNoDetail && (
+      <button
+        onClick={() => {
+          console.log("Phone Number: ", phoneNumbers[0]);
+        }}
+      >
+        Show Current Phone Number.
+      </button>
+      <button
+        onClick={() => {
+          console.log("Phone Number Payload: ", phoneNumberDataPayload);
+        }}
+      >
+        Show Phone Number Payload.
+      </button>
+      <button
+        onClick={() => {
+          console.log("Assistants: ", assistants);
+        }}
+      >
+        Show Assistants.
+      </button>
+      {showPhoneNoDetail ? (
         <div className="flex justify-start h-full ">
           <div
             data-testid="assistant-menu"
@@ -226,7 +224,7 @@ const PhoneNumbers = () => {
                     type="type"
                     readOnly
                     name="callID"
-                    value="84ah887nb-hdb7nb-ddb89"
+                    value={currentPhoneNumber.id}
                     className="bg-white dark:bg-[#14171A] text-center p-2 rounded-l-lg"
                   />
                   <button
@@ -271,14 +269,26 @@ const PhoneNumbers = () => {
                       Assistant
                     </label>
                     <CFormSelect class="text-sm rounded-lg block w-full p-2.5 mb-3 bg-base-200">
-                      <option>Select Assistant</option>
-                      <option value="1" selected>
-                        Auto master
-                      </option>
-                      <option value="2">Two</option>
-                      <option value="3" disabled>
-                        Three
-                      </option>
+                      <option selected>assistant 1</option>
+
+                      {/* {assistants.map((assistant, index) => {
+                        if (currentPhoneNumber.assistantId === assistant.id) {
+                          return (
+                            <>
+                              <option key={index} value={assistant.id} selected>
+                                {assistant} ({assistant.id})
+                              </option>
+                            </>
+                          );
+                        }
+                        return (
+                          <>
+                            <option key={index} value={assistant.id}>
+                              {assistant} ({assistant.id})
+                            </option>
+                          </>
+                        );
+                      })} */}
                     </CFormSelect>
                   </div>
                   {/* <hr /> */}
@@ -372,6 +382,75 @@ const PhoneNumbers = () => {
             </div>
             <br />
             <br />
+          </div>
+        </div>
+      ) : (
+        <div className="h-screen flex flex-col justify-center items-center relative z-0">
+          <div class="flex justify-center items-center w-[330px]">
+            <div class="text-left text-muted-foreground will-change-auto">
+              <div
+                class="flex justify-left will-change-auto transform-none"
+                style={{ opacity: "1", filter: "blur(0px)" }}
+              >
+                <FaMobileRetro className="w-16 h-16" />
+              </div>
+              <h2
+                class="text-xl font-medium text-text will-change-auto transform-none"
+                style={{ opacity: "1", filter: "blur(0px)" }}
+              >
+                Phone Numbers
+              </h2>
+              <p
+                class="text-md text-text/40 mb-4 will-change-auto transform-none"
+                style={{ opacity: "1", filter: "blur(0px)" }}
+              >
+                Assistants are able to be connected to phone numbers for calls.{" "}
+              </p>
+              <p
+                class="text-md text-text/40 will-change-auto transform-none"
+                style={{ opacity: "1", filter: "blur(0px)" }}
+              >
+                You can import from Twilio, vonage, or by one directly from Vapi
+                for use with your assistants.{" "}
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-start items-center my-3 ml-28">
+            <button
+              type="button"
+              disabled
+              className="w-auto mr-3 opacity-50 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            >
+              Buy Number
+              <PlusICon className="w-5 h-5 ml-3" />
+            </button>
+            <button
+              type="button"
+              onClick={() => openImportNumberModal()}
+              className="w-auto mr-3 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            >
+              Import
+              <PlusICon className="w-5 h-5 ml-3" />
+            </button>
+            <button
+              type="button"
+              className="w-auto mr-3 bg-background focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center"
+            >
+              Documentation
+            </button>
+          </div>
+          <div
+            class="flex items-center p-3 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400"
+            role="alert"
+          >
+            <LuAlertTriangle className="w-5 h-5 text-yellow-600 mr-3" />
+            <div>
+              Please add{" "}
+              <a href="/" className="hover:underline">
+                card detail
+              </a>{" "}
+              to buy a number
+            </div>
           </div>
         </div>
       )}
