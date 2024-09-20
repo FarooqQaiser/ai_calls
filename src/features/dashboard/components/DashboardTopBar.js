@@ -6,6 +6,8 @@ import EllipsisVerticalIcon from "@heroicons/react/24/outline/EllipsisVerticalIc
 import ArrowPathIcon from "@heroicons/react/24/outline/ArrowPathIcon";
 import { useState } from "react";
 import Datepicker from "react-tailwindcss-datepicker";
+import CurrencyDollarIcon from "@heroicons/react/24/outline/CurrencyDollarIcon";
+import { useNavigate } from "react-router-dom";
 
 const periodOptions = [
   { name: "Today", value: "TODAY" },
@@ -17,6 +19,7 @@ const periodOptions = [
 ];
 
 function DashboardTopBar({ updateDashboardPeriod }) {
+  const navigate = useNavigate();
   const [dateValue, setDateValue] = useState({
     startDate: new Date().setDate(new Date().getDate() - 7),
     endDate: new Date(),
@@ -28,10 +31,14 @@ function DashboardTopBar({ updateDashboardPeriod }) {
     updateDashboardPeriod(newValue);
   };
 
+  const handlAddFundsButton = () => {
+    navigate("/add-funds");
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="">
-        <Datepicker
+        {/* <Datepicker
           containerClassName="w-72 "
           value={dateValue}
           theme={"light"}
@@ -41,7 +48,7 @@ function DashboardTopBar({ updateDashboardPeriod }) {
           onChange={handleDatePickerValueChange}
           showShortcuts={true}
           primaryColor={"white"}
-        />
+        /> */}
         {/* <SelectBox 
                 options={periodOptions}
                 labelTitle="Period"
@@ -60,6 +67,13 @@ function DashboardTopBar({ updateDashboardPeriod }) {
         <button className="h-10 text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8]">
           <ShareIcon className="w-4 mr-2" />
           Share
+        </button>
+        <button
+          className="h-10 text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8]"
+          onClick={handlAddFundsButton}
+        >
+          <CurrencyDollarIcon className="w-4 mr-2" />
+          Add Funds
         </button>
 
         <div className="dropdown dropdown-bottom dropdown-end  ml-2">
