@@ -7,12 +7,14 @@ import { setPageTitle } from "../../features/common/headerSlice";
 import { VAPI_API_URL } from "../../store";
 import CallLogsNoResult from "../../components/Call Logs/CallLogsNoResult";
 import { useNavigate } from "react-router-dom";
+import moment from "moment/moment";
 
 const CallLogs = () => {
   const [isCallLogs, setIsCallLogs] = useState(false);
   const [data, setData] = useState([]);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [showCallLogsNoResult, setShowCallLogsNoResult] = useState(false);
 
   useEffect(() => {
     const getToken = localStorage.getItem("token");
@@ -33,7 +35,7 @@ const CallLogs = () => {
 
   useEffect(() => {
     dispatch(setPageTitle({ title: "Call Logs" }));
-  }, []);
+  }, [dispatch]);
 
   const handleCopyButton = (callID) => {
     let isCopy = navigator.clipboard.writeText(callID);
@@ -42,26 +44,55 @@ const CallLogs = () => {
     }
   };
 
-  const getCallLogs = () => {
-    const myHeaders = new Headers();
-    myHeaders.append("Authorization", `Bearer ${process.env.REACT_APP_TOKEN}`);
+  const getCallLogs = async () => {
+    let result = null;
 
-    const requestOptions = {
-      method: "GET",
-      headers: myHeaders,
-      redirect: "follow",
-    };
-
-    fetch(VAPI_API_URL + "call", requestOptions)
-      .then((response) => response.json())
-      .then((result) => {
-        console.log("calls", result);
-        if (result.length > 0) {
+    try {
+      const options = {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer e39adb17-33cb-472b-87c2-97f7ee91139f",
+        },
+      };
+      const response = await fetch("https://api.vapi.ai/call", options);
+      result = await response.json();
+      if (response.ok) {
+        if (result) {
+          console.log("List of Call Logs: ", result);
           setData(result);
           setIsCallLogs(true);
+        } else {
+          setShowCallLogsNoResult(true);
         }
-      })
-      .catch((error) => console.error(error));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    getCallLogs();
+  }, []);
+
+  const handleDuration = (item, index) => {
+    const startedAt = moment(
+      item.startedAt.split("T")[1].split(".")[0],
+      "hh:mm:ss"
+    );
+    const updatedAt = moment(
+      item.updatedAt.split("T")[1].split(".")[0],
+      "hh:mm:ss"
+    );
+    const diffInMs = updatedAt.diff(startedAt);
+    const durationInSeconds =
+      " - (Duration: " + Math.floor(diffInMs / 1000) + "s) - ";
+
+    const duration = document.querySelector(`.duration${index}`);
+    if (duration.innerHTML === "...") {
+      duration.innerHTML = durationInSeconds;
+    } else {
+      duration.innerHTML = "...";
+    }
   };
 
   return (
@@ -91,9 +122,9 @@ const CallLogs = () => {
               <th className="font-semibold text-center border-r border-r-gray-600 p-2">
                 Customer
               </th>
-              {/* <th className="font-semibold text-center p-2">
+              <th className="font-semibold text-center p-2">
                 Call Times & Duration
-              </th> */}
+              </th>
             </tr>
             {data.map((item, index) => {
               return (
@@ -141,21 +172,40 @@ const CallLogs = () => {
                     </td> */}
                     <td className="text-left border-r border-r-gray-600 p-2">
                       <p className="dark:bg-[#191E24] bg-[#F2F2F2] text-center p-2 rounded-lg">
-                        {item.phoneNumber?.twilioPhoneNumber
-                          ? item.phoneNumber?.twilioPhoneNumber
-                          : ""}
+                        {item.phoneNumber ? (
+                          <>
+                            {item.phoneNumber?.twilioPhoneNumber
+                              ? item.phoneNumber?.twilioPhoneNumber
+                              : ""}
+                          </>
+                        ) : (
+                          <>Empty</>
+                        )}
                       </p>
                     </td>
                     <td className="text-left border-r border-r-gray-600 p-2">
                       <p className="dark:bg-[#191E24] bg-[#F2F2F2] text-center p-2 rounded-lg">
-                        {item.customer?.number ? item.customer?.number : ""}
+                        {item.customer ? (
+                          <>
+                            {item.customer?.number ? item.customer?.number : ""}
+                          </>
+                        ) : (
+                          <>Empty</>
+                        )}
                       </p>
                     </td>
-                    {/* <td className="text-left p-2">
+                    <td className="text-left p-2">
                       <p className="dark:bg-[#191E24] bg-[#F2F2F2] text-center p-2 rounded-lg">
-                         {item.callTimeDuration}
+                        {item.startedAt.split("T")[0]}
+                        <button
+                          className={`duration${index} p-1 rounded-lg hover:text-[#35978B]`}
+                          onClick={() => handleDuration(item, index)}
+                        >
+                          ...
+                        </button>
+                        {item.updatedAt.split("T")[0]}
                       </p>
-                    </td> */}
+                    </td>
                   </tr>
                 </>
               );
@@ -164,7 +214,10 @@ const CallLogs = () => {
         </>
       ) : (
         <>
-          <CallLogsNoResult />
+          <div className="w-full h-full flex justify-center items-center">
+            <span className="loading loading-spinner loading-lg bg-[#4A00FF] dark:bg-white"></span>
+          </div>
+          {showCallLogsNoResult && <CallLogsNoResult />}
         </>
       )}
     </>

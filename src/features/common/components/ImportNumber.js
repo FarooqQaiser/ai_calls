@@ -5,6 +5,7 @@ import ErrorText from "../../../components/Typography/ErrorText";
 import { showNotification } from "../../common/headerSlice";
 import { addNewLead } from "../../leads/leadSlice";
 import { CNav, CNavItem, CNavLink, CTabContent, CTabPane } from "@coreui/react";
+import { API_URL } from "../../../store";
 
 const INITIAL_TWILIO_OBJ = {
   phone_number: "",
@@ -29,9 +30,11 @@ function ImportNumber({ closeModal, showDetail, setShowDetail }) {
 
   const handleChange = useCallback(() => {
     setShowDetail(!showDetail);
-  }, [setShowDetail]);
+  }, [setShowDetail, showDetail]);
 
-  const importFromTwilio = () => {
+  const importFromTwilio = async () => {
+    setLoading(true);
+
     if (twilioObj.account_sid.trim() === "")
       return setErrorMessage("Twilio account SID is required!");
     else if (twilioObj.auth_token.trim() === "")
@@ -47,16 +50,77 @@ function ImportNumber({ closeModal, showDetail, setShowDetail }) {
         auth_token: twilioObj.auth_token,
         label: twilioObj.label,
       };
-      //   dispatch(addNewLead({ newLeadObj }));
-      console.log(twilioImportObj);
+
+      let result = null;
+      const raw = JSON.stringify({
+        provider: "twilio",
+        number: twilioImportObj.phone_number,
+        twilioAccountSid: twilioImportObj.account_sid,
+        twilioAuthToken: twilioImportObj.auth_token,
+        name: twilioImportObj.label,
+        serverUrlSecret: "",
+      });
+      const options = {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer e39adb17-33cb-472b-87c2-97f7ee91139f",
+          "Content-Type": "application/json",
+        },
+        body: raw,
+      };
+      try {
+        const response = await fetch(
+          "https://api.vapi.ai/phone-number",
+          options
+        );
+        result = await response.json();
+        if (response.ok) {
+          if (result) {
+            console.log(result);
+            sendPhoneNumberID(result.id);
+            setLoading(false);
+            closeModal();
+            handleChange();
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
       dispatch(
         showNotification({ message: "Phone number imported", status: 1 })
       );
-      closeModal();
-      // setShowDetail();
-      handleChange();
     }
   };
+
+  const sendPhoneNumberID = async (phoneNumberId) => {
+    let result = null;
+    const user = JSON.parse(localStorage.getItem("user"));
+    const userId = user.id;
+    try {
+      const response = await fetch(
+        `${API_URL}api/users/add-phone-number/${userId}`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phoneNumberId: phoneNumberId,
+          }),
+        }
+      );
+      result = await response.json();
+      if (response.ok) {
+        if (result) {
+          console.log(result);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const importFromVonage = () => {
     if (vonageObj.api_key.trim() === "")
       return setErrorMessage("API Key is required!");
@@ -105,7 +169,7 @@ function ImportNumber({ closeModal, showDetail, setShowDetail }) {
             active={activeKey === "twilio"}
             onClick={() => setActiveKey("twilio")}
             class={`w-full inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1 text-sm font-medium hover:bg-hover disabled:pointer-events-none disabled:opacity-50 focus:border ${
-              activeKey == "twilio"
+              activeKey === "twilio"
                 ? "shadow text-primary border border-border bg-gray-200 dark:bg-[#1C1E21] "
                 : ""
             } border-transparent flex-1 cursor-pointer`}
@@ -119,7 +183,7 @@ function ImportNumber({ closeModal, showDetail, setShowDetail }) {
             active={activeKey === "vonage"}
             onClick={() => setActiveKey("vonage")}
             class={`w-full inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1 text-sm font-medium hover:bg-hover disabled:pointer-events-none disabled:opacity-50 focus:border ${
-              activeKey == "vonage"
+              activeKey === "vonage"
                 ? "shadow text-primary border bg-gray-200 dark:bg-[#1C1E21] "
                 : ""
             } border-transparent flex-1 cursor-pointer`}
@@ -129,14 +193,14 @@ function ImportNumber({ closeModal, showDetail, setShowDetail }) {
         </CNavItem>
       </CNav>
       <CTabContent>
-        {activeKey == "twilio" && (
+        {activeKey === "twilio" && (
           <CTabPane
             role="tabpanel"
             aria-labelledby="twilio-tab"
             visible={activeKey === "twilio"}
           >
             <InputText
-              type="text"
+              type="tel"
               defaultValue={twilioObj.phone_number}
               updateType="phone_number"
               containerStyle="mt-4"
@@ -180,12 +244,12 @@ function ImportNumber({ closeModal, showDetail, setShowDetail }) {
                 className="btn btn-primary px-6"
                 onClick={() => importFromTwilio()}
               >
-                Import from Twilio
+                {loading ? "Loading..." : "Import from Twilio"}
               </button>
             </div>
           </CTabPane>
         )}
-        {activeKey == "vonage" && (
+        {activeKey === "vonage" && (
           <CTabPane
             role="tabpanel"
             aria-labelledby="vonage-tab"
