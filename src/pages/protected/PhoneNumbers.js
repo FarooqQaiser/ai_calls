@@ -321,7 +321,7 @@ const PhoneNumbers = () => {
                           <button
                             className="bg-white dark:bg-[#14171A] rounded-r-lg p-2"
                             onClick={() =>
-                              handleCopyButton("84ah887nb-hdb7nb-ddb89")
+                              handleCopyButton(currentPhoneNumber?.id)
                             }
                             aria-label="Copy ID"
                           >

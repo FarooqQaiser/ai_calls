@@ -9,6 +9,7 @@ import Blocks from "../pages/protected/Blocks";
 import Squads from "../pages/protected/Squads";
 import VoiceLibrary from "../pages/protected/VoiceLibrary";
 import CallLogs from "../pages/protected/CallLogs";
+import AddFunds from "../pages/protected/AddFunds";
 
 const Dashboard = lazy(() => import("../pages/protected/Dashboard"));
 const Welcome = lazy(() => import("../pages/protected/Welcome"));
@@ -64,6 +65,10 @@ const routes = [
   {
     path: "/call-logs",
     component: CallLogs,
+  },
+  {
+    path: "/add-funds",
+    component: AddFunds,
   },
   {
     path: "/welcome", // the url

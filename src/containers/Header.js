@@ -152,9 +152,9 @@ function Header() {
                   <span className="badge">New</span>
                 </Link>
               </li>
-              {/* <li className="">
-                <Link to={"/app/settings-billing"}>Bill History</Link>
-              </li> */}
+              <li className="">
+                <Link to={"/settings-billing"}>Bill History</Link>
+              </li>
               <div className="divider mt-0 mb-0"></div>
               <li>
                 <a onClick={logoutUser}>Logout</a>

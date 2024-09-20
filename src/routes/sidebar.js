@@ -9,6 +9,7 @@ import ChartPie from "@heroicons/react/24/outline/ChartPieIcon";
 import PhoneIcon from "@heroicons/react/24/outline/PhoneIcon";
 // import ToolsIcon from "@heroicons/react/24/outline/WrenchScrewdriverIcon";
 // import MicrophoneIcon from "@heroicons/react/24/outline/MicrophoneIcon";
+import CurrencyDollarIcon from "@heroicons/react/24/outline/CurrencyDollarIcon";
 
 const iconClasses = `h-6 w-6`;
 const submenuIconClasses = `h-5 w-5`;
@@ -63,6 +64,11 @@ const routes = [
     path: "/call-logs",
     icon: <InboxArrowDownIcon className={iconClasses} />,
     name: "Call Logs",
+  },
+  {
+    path: "/add-funds",
+    icon: <CurrencyDollarIcon className={iconClasses} />,
+    name: "Add Funds",
   },
 ];
 
