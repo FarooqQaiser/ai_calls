@@ -66,9 +66,9 @@ const routes = [
     name: "Call Logs",
   },
   {
-    path: "/add-funds",
+    path: "/payments",
     icon: <CurrencyDollarIcon className={iconClasses} />,
-    name: "Add Funds",
+    name: "Payments",
   },
 ];
 
