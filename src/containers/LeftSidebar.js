@@ -41,7 +41,7 @@ function LeftSidebar() {
             >
               {sidebarWidth === 240 && (
                 <div className="flex-row flex items-center gap-3">
-                  <div className="bg-[#5D17EB] p-2 rounded-xl text-white">
+                  <div className="bg-[#5D17EB] dark:bg-[#7480FF] p-2 rounded-xl text-white">
                     AC
                   </div>
                   <span>AI Caller</span>

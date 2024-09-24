@@ -101,17 +101,18 @@ const AddFunds = ({ isModalOpen, setIsModalOpen, setLoading }) => {
         <div
           id="popup-modal"
           tabIndex="-1"
-          className="fixed top-0 right-0 left-0 z-50 flex justify-center items-center w-full h-full bg-black bg-opacity-50 overflow-y-auto overflow-x-hidden"
+          className="fixed inset-0 z-50 flex justify-center items-center w-full h-full bg-black bg-opacity-50 overflow-y-auto"
         >
-          <div className="relative p-4 w-full max-w-md max-h-full">
-            <div className="relative bg-white rounded-lg shadow dark:bg-gray-700">
+          <div className="relative p-6 w-full max-w-lg max-h-full">
+            <div className="relative bg-white dark:bg-[#14171A] rounded-lg shadow-lg">
+              {/* Close Button */}
               <button
                 type="button"
-                className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                className="absolute top-4 right-4 text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-2 transition-colors dark:hover:bg-gray-600 dark:hover:text-white"
                 onClick={toggleModal}
               >
                 <svg
-                  className="w-3 h-3"
+                  className="w-5 h-5"
                   aria-hidden="true"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -128,62 +129,54 @@ const AddFunds = ({ isModalOpen, setIsModalOpen, setLoading }) => {
                 <span className="sr-only">Close modal</span>
               </button>
 
-              <div className="flex flex-col gap-5 p-4 md:p-5 text-center">
-                <div className="divider text-white">
-                  <h1 className="text-xl font-semibold text-black dark:text-white">
-                    Add Funds
-                  </h1>
+              {/* Modal Content */}
+              <div className="p-6 md:p-8 text-center">
+                <h1 className="text-2xl font-semibold text-black dark:text-white mb-6">
+                  Add Funds
+                </h1>
+                <p className="text-lg text-gray-700 dark:text-gray-300 mb-4">
+                  Please enter the amount to add:
+                </p>
+
+                {/* Input Section */}
+                <div className="flex justify-center items-center mb-6">
+                  <input
+                    type="number"
+                    id="addFunds"
+                    className="w-32 text-center border border-gray-300 bg-gray-50 rounded-lg p-2.5 text-black focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500"
+                    required
+                    value={fundsAmount}
+                    onChange={(e) => setFundsAmount(e.target.value)}
+                  />
                 </div>
-                <div className="w-full">
-                  <p className="text-black dark:text-white">
-                    Enter the amount below which you want to send.
-                  </p>
-                </div>
-                <div className="flex justify-between items-center">
-                  <label
-                    htmlFor="addFunds"
-                    className="block text-black dark:text-white"
-                  >
-                    Enter Amount:
-                  </label>
-                  <div className="flex items-center gap-2">
-                    $
-                    <input
-                      type="number"
-                      id="addFunds"
-                      className="block w-16 rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-black focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-                      required
-                      value={fundsAmount}
-                      onChange={(e) => setFundsAmount(e.target.value)}
-                    />
-                  </div>
-                </div>
+
+                {/* Error Message */}
                 {showError && (
-                  <>
-                    <p className="text-red-600 text-lg font-semibold">
-                      The minimum amount to send is $10!
-                    </p>
-                  </>
+                  <p className="text-red-600 text-lg font-semibold mb-6">
+                    The minimum amount to send is $10!
+                  </p>
                 )}
-                <div className="w-full flex justify-center gap-5">
+
+                {/* Action Buttons */}
+                <div className="flex justify-center gap-4 mb-4">
                   <button
                     onClick={toggleModal}
                     type="button"
-                    className="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+                    className="py-2.5 px-5 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-300 hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700"
                   >
                     No, cancel
                   </button>
                   <button
                     onClick={handleYesButton}
                     type="button"
-                    className="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center"
+                    className="py-2.5 px-5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-800 focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800"
                   >
                     Yes, I'm sure
                   </button>
                 </div>
 
-                {/* PayPal button container */}
-                <div id="paypal-button-container"></div>
+                {/* PayPal Button Container */}
+                <div id="paypal-button-container" className="mt-4"></div>
               </div>
             </div>
           </div>
