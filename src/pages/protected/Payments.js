@@ -64,12 +64,68 @@ const Payments = () => {
       {loading ? (
         <>
           <div className="w-full h-full flex justify-center items-center">
-            <span className="loading loading-spinner loading-lg bg-[#4A00FF] dark:bg-white"></span>
+            <span className="loading loading-spinner loading-lg bg-[#4A00FF] dark:bg-[white]"></span>
           </div>
         </>
       ) : (
         <>
-          <div className="w-full dark:bg-[#1D232A] p-5 rounded-2xl flex justify-between mb-10 text-xl font-semibold">
+          <div className="w-full flex justify-end gap-3">
+            <button
+              className="h-8 text-white bg-[#4A00FF] hover:bg-[#3F00E7] font-medium rounded-lg text-sm px-3 py-2.5 text-center flex justify-center items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] "
+              onClick={handleAddFundsButton}
+            >
+              $ Add Balance
+            </button>
+            <button
+              className="h-8 text-white mr-4 bg-[#4A00FF] hover:bg-[#3F00E7] font-medium rounded-lg text-sm px-3 py-2.5 text-center flex  items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] "
+              onClick={() => setLoading(true)}
+            >
+              <ArrowPathIcon className="w-4 mr-2" />
+              Refresh Data
+            </button>
+          </div>
+          <div className="dark:bg-[#14171A] bg-white p-6 rounded-3xl mt-5">
+            <h3 className="text-xl font-medium dark:text-white text-gray-800">
+              Total Balance
+            </h3>
+            <div className="flex mt-2 flex-row justify-between">
+              <h2 className="text-5xl font-extrabold text-[#4A00FF] dark:text-white ">
+                {currentBalance.toFixed(2)} $
+              </h2>
+            </div>
+
+            <ul className="text-gray-800 dark:text-white mt-4 space-y-4">
+              <li className="flex flex-wrap gap-4 text-sm font-bold ">
+                {" "}
+                {lastTransactionDateTime && (
+                  <>
+                    <h1 className="flex flex-row">
+                      <span className="font-normal">
+                        last transaction was at {""}
+                        <span className="text-[#4A00FF] dark:text-white font-semibold">
+                          {new Date(lastTransactionDateTime).toLocaleTimeString(
+                            [],
+                            { hour: "2-digit", minute: "2-digit", hour12: true }
+                          )}
+                        </span>
+                      </span>
+
+                      <span className="ml-1 font-normal">
+                        on {""}
+                        <span className="text-[#4A00FF] dark:text-white font-semibold">
+                          {new Date(lastTransactionDateTime).toLocaleDateString(
+                            "en-US",
+                            { year: "numeric", month: "long", day: "numeric" }
+                          )}
+                        </span>
+                      </span>
+                    </h1>
+                  </>
+                )}
+              </li>
+            </ul>
+          </div>
+          {/* <div className="w-full dark:bg-[#1D232A] p-5 rounded-2xl flex justify-between mb-10 text-xl font-semibold">
             <div className="flex flex-col pr-2 gap-3">
               <h1 className="text-2xl">
                 Current Balance:
@@ -95,15 +151,8 @@ const Payments = () => {
               >
                 Add Funds
               </button>
-              {/* <button
-                className="h-10 text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8]"
-                onClick={() => setLoading(true)}
-              >
-                <ArrowPathIcon className="w-4 mr-2" />
-                Refresh Data
-              </button> */}
             </div>
-          </div>
+          </div> */}
           <br />
           <Billing transactionHistory={transactionHistory} />
           {showAddFunds && (
