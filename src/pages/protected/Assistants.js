@@ -64,6 +64,7 @@ import { toast } from "react-toastify";
 import PublishUpdatedAssistant from "../../components/Assistants Api/PublishUpdatedAssistant";
 import { dataStructure } from "../../components/Assistants Api/UpdatedDataStructure";
 import { useNavigate } from "react-router-dom";
+import { ContentType } from "@vapi-ai/web/dist/api";
 
 const Assistants = () => {
   const dispatch = useDispatch();
@@ -356,6 +357,7 @@ const Assistants = () => {
         setIsCurrentAssistantDataLoading(false);
         setNoAssistant(false);
         setCurrentAssistant(result);
+        console.log(currentAssistant);
         setTemperature(result.model.temperature);
         setFirstMessage(result.firstMessage);
         setSystemPrompt(result.model.messages[0].content);
@@ -530,6 +532,152 @@ const Assistants = () => {
     // console.log(assistantObj);
   };
 
+  const createCall = async () => {
+    const createCallPayload = {
+      name: currentAssistant.name,
+      assistantId: currentAssistant.id,
+      assistant: {
+        transcriber: {
+          provider: currentAssistant.transcriber.provider,
+          model: currentAssistant.transcriber.model,
+          language: currentAssistant.transcriber.language,
+          smartFormat: currentAssistant.transcriber.smartFormat,
+          languageDetectionEnabled:
+            currentAssistant.transcriber.languageDetectionEnabled,
+          keywords: currentAssistant.transcriber.keywords,
+          endpointing: 255,
+        },
+        model: {
+          messages: currentAssistant.model.messages,
+          tools: currentAssistant.model.tools,
+          toolIds: currentAssistant.model.toolIds,
+          provider: currentAssistant.model.provider,
+          model: currentAssistant.model.model,
+          temperature: currentAssistant.model.temperature,
+          knowledgeBase: currentAssistant.model.knowledgeBase,
+          maxTokens: currentAssistant.model.maxTokens,
+          emotionRecognitionEnabled:
+            currentAssistant.model.emotionRecognitionEnabled,
+          numFastTurns: currentAssistant.model.numFastTurns,
+        },
+        voice: {
+          fillerInjectionEnabled: currentAssistant.voice.fillerInjectionEnabled,
+          provider: currentAssistant.voice.provider,
+          voiceId: currentAssistant.voice.voiceId,
+          speed: currentAssistant.voice.speed,
+          chunkPlan: currentAssistant.voice.chunkPlan,
+        },
+        firstMessageMode: currentAssistant.firstMessageMode,
+        hipaaEnabled: currentAssistant.hipaaEnabled,
+        clientMessages: [
+          "conversation-update",
+          "function-call",
+          "hang",
+          "model-output",
+          "speech-update",
+          "status-update",
+          "transcript",
+          "tool-calls",
+          "user-interrupted",
+          "voice-input",
+        ],
+        serverMessages: [
+          "conversation-update",
+          "end-of-call-report",
+          "function-call",
+          "hang",
+          "speech-update",
+          "status-update",
+          "tool-calls",
+          "transfer-destination-request",
+          "user-interrupted",
+        ],
+        silenceTimeoutSeconds: currentAssistant.silenceTimeoutSeconds,
+        maxDurationSeconds: currentAssistant.maxDurationSeconds,
+        backgroundSound: currentAssistant.backgroundSound,
+        backchannelingEnabled: currentAssistant.backchannelingEnabled,
+        backgroundDenoisingEnabled: currentAssistant.backgroundDenoisingEnabled,
+        modelOutputInMessagesEnabled:
+          currentAssistant.modelOutputInMessagesEnabled,
+        transportConfigurations: currentAssistant.transportConfigurations,
+        name: currentAssistant.name,
+        firstMessage: currentAssistant.firstMessage,
+        voicemailDetection: {
+          provider: "twilio",
+          voicemailDetectionTypes: ["machine_end_beep", "machine_end_silence"],
+          enabled: true,
+          machineDetectionTimeout: 31,
+          machineDetectionSpeechThreshold: 3500,
+          machineDetectionSpeechEndThreshold: 2750,
+          machineDetectionSilenceTimeout: 6000,
+        },
+        voicemailMessage: currentAssistant.voicemailMessage,
+        endCallMessage: currentAssistant.endCallMessage,
+        endCallPhrases: currentAssistant.endCallPhrases,
+        metadata: {},
+        serverUrl: currentAssistant.serverUrl,
+        serverUrlSecret: currentAssistant.serverUrlSecret,
+        analysisPlan: currentAssistant.analysisPlan,
+        artifactPlan: currentAssistant.artifactPlan,
+        messagePlan: currentAssistant.messagePlan,
+        startSpeakingPlan: currentAssistant.startSpeakingPlan,
+        stopSpeakingPlan: currentAssistant.stopSpeakingPlan,
+        monitorPlan: currentAssistant.monitorPlan,
+        credentialIds: currentAssistant.credentialIds,
+      },
+      phoneNumberId: "<string>",
+      // phoneNumber: {
+      //   fallbackDestination: {
+      //     type: "number",
+      //     numberE164CheckEnabled: true,
+      //     number: "<string>",
+      //     extension: "<string>",
+      //     callerId: "<string>",
+      //     message: "<string>",
+      //     description: "<string>",
+      //   },
+      //   twilioPhoneNumber: "<string>",
+      //   twilioAccountSid: "<string>",
+      //   twilioAuthToken: "<string>",
+      //   name: "<string>",
+      //   assistantId: "<string>",
+      //   squadId: "<string>",
+      //   serverUrl: "<string>",
+      //   serverUrlSecret: "<string>",
+      // },
+      customerId: "<string>",
+      // customer: {
+      //   numberE164CheckEnabled: true,
+      //   extension: null,
+      //   number: "<string>",
+      //   sipUri: "<string>",
+      //   name: "<string>",
+      // },
+    };
+    let result = null;
+
+    try {
+      const options = {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer e39adb17-33cb-472b-87c2-97f7ee91139f",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(createCallPayload),
+      };
+
+      const response = await fetch("https://api.vapi.ai/call", options);
+      result = await response.json();
+      if (response.ok) {
+        if (result) {
+          console.log("Result: ", result);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <>
       {loading ? (
@@ -622,25 +770,23 @@ const Assistants = () => {
                           ? currentAssistant.name
                           : "Assistant"}
                       </div>
-                      <div className="flex justify-end md:w-[320px] bg-foreground/5 backdrop-blur-sm">
+                      <div className="flex justify-end gap-5 md:w-[320px] bg-foreground/5 backdrop-blur-sm">
                         <button
-                          className="text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8]"
+                          className="h-10 p-2 text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8]"
                           onClick={() => setLoading(true)}
                         >
                           <ArrowPathIcon className="w-4 mr-2" />
                           Refresh Data
                         </button>
-                      </div>
-                      {/* <div>
                         <button
                           type="button"
-                          onClick={() => openNotification()}
-                          className="w-auto text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex justify-center items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8]"
+                          onClick={createCall}
+                          className="h-10 p-2 text-white bg-[#4A00FF] hover:bg-[#3F00E7] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex items-center dark:bg-[#7480FF] dark:hover:bg-[#646EE4] dark:focus:ring-[#5763e8]"
                         >
                           <PhoneICon className="w-5 h-5 mr-3" />
                           Talk with Assistant
                         </button>
-                      </div> */}
+                      </div>
                     </div>
                     {/* <div className="grid grid-cols-3 sm:grid-cols-2 md:flex md:items-center md:flex-wrap sm:flex-auto sm:gap-x-4 mb-3">
                       <div className="flex items-center mb-1 gap-1">

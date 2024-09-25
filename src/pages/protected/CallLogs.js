@@ -28,10 +28,10 @@ const CallLogs = () => {
     }
   }, [navigate]);
 
-  useEffect(() => {
-    // setData(DATA);
-    getCallLogs();
-  }, []);
+  // useEffect(() => {
+  //   // setData(DATA);
+  //   getCallLogs();
+  // }, []);
 
   useEffect(() => {
     dispatch(setPageTitle({ title: "Call Logs" }));
@@ -99,7 +99,7 @@ const CallLogs = () => {
     <>
       {isCallLogs ? (
         <>
-          <table className="text-sm w-full bg-[#FFFFFF] p-5 dark:bg-[#1D232A] rounded-2xl">
+          <table className="text-sm w-full bg-[#FFFFFF] p-5 dark:bg-[#14171A] rounded-2xl">
             <tr className="">
               <th className="font-semibold text-center border-r border-r-gray-600 p-2">
                 Type
@@ -166,10 +166,10 @@ const CallLogs = () => {
                       </p>
                     </td>
                     {/* <td className="text-left border-r border-r-gray-600 p-2">
-                      <p className="dark:bg-[#191E24] bg-[#F2F2F2] text-center p-2 rounded-lg">
-                        {item.name}
-                      </p>
-                    </td> */}
+                  <p className="dark:bg-[#191E24] bg-[#F2F2F2] text-center p-2 rounded-lg">
+                    {item.name}
+                  </p>
+                </td> */}
                     <td className="text-left border-r border-r-gray-600 p-2">
                       <p className="dark:bg-[#191E24] bg-[#F2F2F2] text-center p-2 rounded-lg">
                         {item.phoneNumber ? (

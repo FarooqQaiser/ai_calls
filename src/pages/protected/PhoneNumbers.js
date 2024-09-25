@@ -66,8 +66,6 @@ const PhoneNumbers = () => {
   // }, [phoneNumberId, phoneNumbers]);
 
   useEffect(() => {
-    dispatch(setPageTitle({ title: "Phone Numbers" }));
-
     const fetchPhoneNumbers = async () => {
       setLoading(true);
       let result = null;
@@ -76,10 +74,15 @@ const PhoneNumbers = () => {
           API_URL + `api/users/get-users-phone-numbers/${userId}`,
           {
             method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
           }
         );
         result = await response.json();
+        console.log(result);
         if (response.ok) {
+          console.log("Phone Numbers: ", result);
           if (result) {
             setLoading(false);
             setPhoneNumbers(result);
@@ -87,12 +90,17 @@ const PhoneNumbers = () => {
             // setCurrentPhoneNumber(result[0]);
             setPhoneNumberId(result[0].id);
             setShowPhoneNoDetail(true);
-          } else {
+          }
+        } else {
+          if (result.message === "No phone numbers found for this user.") {
             setLoading(false);
+            setShowPhoneNoDetail(false);
           }
         }
       } catch (err) {
         console.error(err);
+        setLoading(false);
+        setShowPhoneNoDetail(false);
       }
     };
 
@@ -120,7 +128,11 @@ const PhoneNumbers = () => {
     };
 
     fetchAssistants();
-  }, [dispatch, showPhoneNoDetail, userId]);
+  }, [showPhoneNoDetail, userId]);
+
+  useEffect(() => {
+    dispatch(setPageTitle({ title: "Phone Numbers" }));
+  }, [dispatch]);
 
   useEffect(() => {
     let result = null;
@@ -173,6 +185,7 @@ const PhoneNumbers = () => {
       })
     );
   };
+
   const handleCopyButton = (callID) => {
     let isCopy = navigator.clipboard.writeText(callID);
     if (isCopy) {
@@ -229,6 +242,13 @@ const PhoneNumbers = () => {
           <div className="w-full h-full flex justify-center items-center">
             <span className="loading loading-spinner loading-lg bg-[#4A00FF] dark:bg-white"></span>
           </div>
+          <p
+            onClick={() => {
+              console.log(userId);
+            }}
+          >
+            userId
+          </p>
         </>
       ) : (
         <>
@@ -559,6 +579,14 @@ const PhoneNumbers = () => {
                       </div>
                     </div>
                   </div>
+
+                  <p
+                    onClick={() => {
+                      console.log(userId);
+                    }}
+                  >
+                    userId
+                  </p>
                 </div>
               )}
             </div>
