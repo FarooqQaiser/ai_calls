@@ -6,7 +6,7 @@ const Tools = () => {
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(setPageTitle({ title: "Tools" }));
-  }, []);
+  }, [dispatch]);
   return <div>Tools</div>;
 };
 

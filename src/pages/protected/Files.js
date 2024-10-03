@@ -6,7 +6,7 @@ const Files = () => {
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(setPageTitle({ title: "Files" }));
-  }, []);
+  }, [dispatch]);
   return <div>Files</div>;
 };
 

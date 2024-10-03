@@ -50,6 +50,7 @@ function Login() {
         );
       }
 
+      console.log(data);
       const { token, user } = data;
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
@@ -57,7 +58,13 @@ function Login() {
       const userName = storedUser?.firstName;
 
       setLoading(false);
-      navigate("/");
+      if (data.role === "User") {
+        navigate("/");
+      } else if (data.role === "Admin") {
+        navigate("/admin/dashboard");
+      } else {
+        toast.error("Role is not specified!!");
+      }
       toast.success(`Welcome ${userName}`, {
         position: "top-right",
         autoClose: 1000,

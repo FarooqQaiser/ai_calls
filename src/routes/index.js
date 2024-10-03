@@ -10,6 +10,7 @@ import Squads from "../pages/protected/Squads";
 import VoiceLibrary from "../pages/protected/VoiceLibrary";
 import CallLogs from "../pages/protected/CallLogs";
 import Payments from "../pages/protected/Payments";
+import AdminDashboard from "../AdminDashboard";
 
 const Dashboard = lazy(() => import("../pages/protected/Dashboard"));
 const Welcome = lazy(() => import("../pages/protected/Welcome"));
@@ -125,6 +126,10 @@ const routes = [
   {
     path: "/blank",
     component: Blank,
+  },
+  {
+    path: "/admin/dashboard",
+    component: AdminDashboard,
   },
 ];
 

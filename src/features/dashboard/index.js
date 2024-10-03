@@ -1,18 +1,18 @@
 import DashboardStats from "./components/DashboardStats";
-import AmountStats from "./components/AmountStats";
-import PageStats from "./components/PageStats";
+// import AmountStats from "./components/AmountStats";
+// import PageStats from "./components/PageStats";
 
 import UserChannels from "./components/UserChannels";
-import LineChart from "./components/LineChart";
-import BarChart from "./components/BarChart";
-import DashboardTopBar from "./components/DashboardTopBar";
-import { useDispatch } from "react-redux";
-import { showNotification } from "../common/headerSlice";
+// import LineChart from "./components/LineChart";
+// import BarChart from "./components/BarChart";
+// import DashboardTopBar from "./components/DashboardTopBar";
+// import { useDispatch } from "react-redux";
+// import { showNotification } from "../common/headerSlice";
 import {
   Chart as ChartJS,
   Filler,
   ArcElement,
-  Title,
+  // Title,
   Tooltip,
   Legend,
 } from "chart.js";
@@ -27,23 +27,24 @@ import {
 } from "react-icons/md";
 import { FaUsersBetweenLines } from "react-icons/fa6";
 import { useEffect, useState } from "react";
-import { CRow, CCol } from "@coreui/react";
-import { VAPI_API_URL } from "../../store";
+// import { CRow, CCol } from "@coreui/react";
+import { API_URL, VAPI_API_URL } from "../../store";
 
 ChartJS.register(ArcElement, Tooltip, Legend, Tooltip, Filler, Legend);
 function Dashboard() {
-  const dispatch = useDispatch();
-  const date = new Date();
-  const [token, setToken] = useState(localStorage.getItem("token")); //oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  const oneWeekAgo = date.setDate(date.getDate() - 7);
-  const [startDate, setStartDate] = useState(
-    new Date(oneWeekAgo).toISOString()
-  );
-  const [endDate, setEndDate] = useState(new Date().toISOString());
+  // const dispatch = useDispatch();
+  // const date = new Date();
+  // const [token, setToken] = useState(localStorage.getItem("token")); //oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  // const oneWeekAgo = date.setDate(date.getDate() - 7);
+  // const [startDate, setStartDate] = useState(
+  //   new Date(oneWeekAgo).toISOString()
+  // );
+  // const [endDate, setEndDate] = useState(new Date().toISOString());
+  const [currentBalance, setCurrentBalance] = useState("0");
   const [totalCallMins, setTotalCallMins] = useState("0");
   const [noOfCalls, setNoOfCalls] = useState("0");
   const [totalSpent, setTotalSpent] = useState("0.00");
-  const [costPerProvider, setCostPerProvider] = useState("0.00");
+  // const [costPerProvider, setCostPerProvider] = useState("0.00");
   const [averageCost, setAverageCost] = useState("0.00");
   const [assistants, setAssistants] = useState([]);
   const [assistantCalls, setAssistantCalls] = useState([]);
@@ -53,20 +54,21 @@ function Dashboard() {
   const [assistantsName, setAssistantsName] = useState([]);
   const [assistantsNameData, setAssistantsNameData] = useState([]);
   const [assistantsDurData, setAssistantsDurData] = useState([]);
+  const userId = JSON.parse(localStorage.getItem("user")).id;
 
-  const updateDashboardPeriod = (newRange) => {
-    // Dashboard range changed, write code to refresh your values
-    setStartDate(new Date(newRange.startDate).toISOString());
-    setEndDate(new Date(newRange.endDate).toISOString());
+  // const updateDashboardPeriod = (newRange) => {
+  //   // Dashboard range changed, write code to refresh your values
+  //   setStartDate(new Date(newRange.startDate).toISOString());
+  //   setEndDate(new Date(newRange.endDate).toISOString());
 
-    analytics();
-    dispatch(
-      showNotification({
-        message: `Period updated to ${newRange.startDate} to ${newRange.endDate}`,
-        status: 1,
-      })
-    );
-  };
+  //   analytics();
+  //   dispatch(
+  //     showNotification({
+  //       message: `Period updated to ${newRange.startDate} to ${newRange.endDate}`,
+  //       status: 1,
+  //     })
+  //   );
+  // };
   const options = {
     responsive: true,
     plugins: {
@@ -74,14 +76,14 @@ function Dashboard() {
     },
   };
 
-  const labels = [
-    "Electronics",
-    "Home Applicances",
-    "Beauty",
-    "Furniture",
-    "Watches",
-    "Apparel",
-  ];
+  // const labels = [
+  //   "Electronics",
+  //   "Home Applicances",
+  //   "Beauty",
+  //   "Furniture",
+  //   "Watches",
+  //   "Apparel",
+  // ];
 
   const reasonData = {
     labels: endCalllabels,
@@ -136,14 +138,6 @@ function Dashboard() {
     ],
   };
 
-  useEffect(() => {
-    const getToken = localStorage.getItem("token");
-    if (getToken) {
-      setToken(getToken);
-      analytics();
-    }
-  }, []);
-
   const getAssistantName = async (id, index, duration) => {
     const getCallsCount = assistantCalls.filter(
       (item) => item.assistantId == id
@@ -182,308 +176,324 @@ function Dashboard() {
     setAssistantsDurData(getDuration);
   };
 
-  const analytics = () => {
-    const myHeaders = new Headers();
-    myHeaders.append("Authorization", `Bearer ${process.env.REACT_APP_TOKEN}`);
-    myHeaders.append("Content-Type", "application/json");
+  useEffect(() => {
+    const getToken = localStorage.getItem("token");
+    if (getToken) {
+      // setToken(getToken);
 
-    const raw = JSON.stringify({
-      queries: [
-        {
-          name: "LLM, STT, TTS, VAPI Costs",
-          table: "call",
-          operations: [
-            {
-              operation: "sum",
-              column: "costBreakdown.llm",
-            },
-            {
-              operation: "sum",
-              column: "costBreakdown.stt",
-            },
-            {
-              operation: "sum",
-              column: "costBreakdown.tts",
-            },
-            {
-              operation: "sum",
-              column: "costBreakdown.vapi",
-            },
-          ],
-          timeRange: {
-            start: startDate,
-            end: endDate,
-            step: "day",
-            timezone: "UTC",
-          },
-        },
-        {
-          name: "Total Call Duration",
-          table: "call",
-          operations: [
-            {
-              operation: "sum",
-              column: "duration",
-            },
-          ],
-          timeRange: {
-            start: startDate,
-            end: endDate,
-            step: "day",
-            timezone: "UTC",
-          },
-        },
-        {
-          name: "Cost Per Provider",
-          table: "call",
-          operations: [
-            {
-              operation: "sum",
-              column: "cost",
-            },
-          ],
-          timeRange: {
-            start: startDate,
-            end: endDate,
-            step: "day",
-            timezone: "UTC",
-          },
-        },
-        {
-          name: "Average Call Cost",
-          table: "call",
-          operations: [
-            {
-              operation: "avg",
-              column: "cost",
-            },
-          ],
-          timeRange: {
-            start: startDate,
-            end: endDate,
-            step: "day",
-            timezone: "UTC",
-          },
-        },
-        {
-          name: "Number of Calls by Type",
-          table: "call",
-          operations: [
-            {
-              operation: "count",
-              column: "id",
-            },
-          ],
-          groupBy: ["type"],
-          timeRange: {
-            start: startDate,
-            end: endDate,
-            step: "day",
-            timezone: "UTC",
-          },
-        },
-        {
-          name: "Number of Failed Calls",
-          table: "call",
-          operations: [
-            {
-              operation: "count",
-              column: "id",
-            },
-          ],
-          groupBy: ["endedReason"],
-          timeRange: {
-            start: startDate,
-            end: endDate,
-            step: "day",
-            timezone: "UTC",
-          },
-        },
-        {
-          name: "Number of Calls by Assistant",
-          table: "call",
-          operations: [
-            {
-              operation: "count",
-              column: "id",
-            },
-          ],
-          groupBy: ["assistantId"],
-          timeRange: {
-            start: startDate,
-            end: endDate,
-            step: "day",
-            timezone: "UTC",
-          },
-        },
-        {
-          name: "Average Call Duration by Assistant",
-          table: "call",
-          operations: [
-            {
-              operation: "avg",
-              column: "duration",
-            },
-          ],
-          groupBy: ["assistantId"],
-          timeRange: {
-            start: startDate,
-            end: endDate,
-            step: "day",
-            timezone: "UTC",
-          },
-        },
-        {
-          name: "Total Minutes",
-          table: "call",
-          operations: [
-            {
-              operation: "sum",
-              column: "duration",
-            },
-          ],
-          timeRange: {
-            start: startDate,
-            end: endDate,
-            step: "day",
-            timezone: "UTC",
-          },
-        },
-        {
-          name: "Total Spent",
-          table: "call",
-          operations: [
-            {
-              operation: "sum",
-              column: "cost",
-            },
-          ],
-          timeRange: {
-            start: startDate,
-            end: endDate,
-            step: "day",
-            timezone: "UTC",
-          },
-        },
-      ],
-    });
+      const analytics = async () => {
+        const myHeaders = new Headers();
+        myHeaders.append(
+          "Authorization",
+          `Bearer ${process.env.REACT_APP_TOKEN}`
+        );
+        myHeaders.append("Content-Type", "application/json");
 
-    const requestOptions = {
-      method: "POST",
-      headers: myHeaders,
-      body: raw,
-      redirect: "follow",
-    };
+        // const raw = JSON.stringify({
+        //   queries: [
+        //     {
+        //       name: "LLM, STT, TTS, VAPI Costs",
+        //       table: "call",
+        //       operations: [
+        //         {
+        //           operation: "sum",
+        //           column: "costBreakdown.llm",
+        //         },
+        //         {
+        //           operation: "sum",
+        //           column: "costBreakdown.stt",
+        //         },
+        //         {
+        //           operation: "sum",
+        //           column: "costBreakdown.tts",
+        //         },
+        //         {
+        //           operation: "sum",
+        //           column: "costBreakdown.vapi",
+        //         },
+        //       ],
+        //       timeRange: {
+        //         start: startDate,
+        //         end: endDate,
+        //         step: "day",
+        //         timezone: "UTC",
+        //       },
+        //     },
+        //     {
+        //       name: "Total Call Duration",
+        //       table: "call",
+        //       operations: [
+        //         {
+        //           operation: "sum",
+        //           column: "duration",
+        //         },
+        //       ],
+        //       timeRange: {
+        //         start: startDate,
+        //         end: endDate,
+        //         step: "day",
+        //         timezone: "UTC",
+        //       },
+        //     },
+        //     {
+        //       name: "Cost Per Provider",
+        //       table: "call",
+        //       operations: [
+        //         {
+        //           operation: "sum",
+        //           column: "cost",
+        //         },
+        //       ],
+        //       timeRange: {
+        //         start: startDate,
+        //         end: endDate,
+        //         step: "day",
+        //         timezone: "UTC",
+        //       },
+        //     },
+        //     {
+        //       name: "Average Call Cost",
+        //       table: "call",
+        //       operations: [
+        //         {
+        //           operation: "avg",
+        //           column: "cost",
+        //         },
+        //       ],
+        //       timeRange: {
+        //         start: startDate,
+        //         end: endDate,
+        //         step: "day",
+        //         timezone: "UTC",
+        //       },
+        //     },
+        //     {
+        //       name: "Number of Calls by Type",
+        //       table: "call",
+        //       operations: [
+        //         {
+        //           operation: "count",
+        //           column: "id",
+        //         },
+        //       ],
+        //       groupBy: ["type"],
+        //       timeRange: {
+        //         start: startDate,
+        //         end: endDate,
+        //         step: "day",
+        //         timezone: "UTC",
+        //       },
+        //     },
+        //     {
+        //       name: "Number of Failed Calls",
+        //       table: "call",
+        //       operations: [
+        //         {
+        //           operation: "count",
+        //           column: "id",
+        //         },
+        //       ],
+        //       groupBy: ["endedReason"],
+        //       timeRange: {
+        //         start: startDate,
+        //         end: endDate,
+        //         step: "day",
+        //         timezone: "UTC",
+        //       },
+        //     },
+        //     {
+        //       name: "Number of Calls by Assistant",
+        //       table: "call",
+        //       operations: [
+        //         {
+        //           operation: "count",
+        //           column: "id",
+        //         },
+        //       ],
+        //       groupBy: ["assistantId"],
+        //       timeRange: {
+        //         start: startDate,
+        //         end: endDate,
+        //         step: "day",
+        //         timezone: "UTC",
+        //       },
+        //     },
+        //     {
+        //       name: "Average Call Duration by Assistant",
+        //       table: "call",
+        //       operations: [
+        //         {
+        //           operation: "avg",
+        //           column: "duration",
+        //         },
+        //       ],
+        //       groupBy: ["assistantId"],
+        //       timeRange: {
+        //         start: startDate,
+        //         end: endDate,
+        //         step: "day",
+        //         timezone: "UTC",
+        //       },
+        //     },
+        //     {
+        //       name: "Total Minutes",
+        //       table: "call",
+        //       operations: [
+        //         {
+        //           operation: "sum",
+        //           column: "duration",
+        //         },
+        //       ],
+        //       timeRange: {
+        //         start: startDate,
+        //         end: endDate,
+        //         step: "day",
+        //         timezone: "UTC",
+        //       },
+        //     },
+        //     {
+        //       name: "Total Spent",
+        //       table: "call",
+        //       operations: [
+        //         {
+        //           operation: "sum",
+        //           column: "cost",
+        //         },
+        //       ],
+        //       timeRange: {
+        //         start: startDate,
+        //         end: endDate,
+        //         step: "day",
+        //         timezone: "UTC",
+        //       },
+        //     },
+        //   ],
+        // });
 
-    fetch(VAPI_API_URL + "analytics", requestOptions)
-      .then((response) => response.json())
-      .then((result) => {
-        console.log(result);
-        // total call minutes
-        let totalMins = result.filter((res) => res.name == "Total Minutes")[0];
-        if (totalMins.result?.length > 0) {
-          let totalMinSum;
-          totalMinSum = totalMins.result?.reduce(function (prev, current) {
-            return parseInt(prev + +current.sumDuration);
-          }, 0);
-          setTotalCallMins(totalMinSum);
-        }
-        // number of calls
-        let callNo = result.filter(
-          (res) => res.name == "Number of Calls by Assistant"
-        )[0];
-        setNoOfCalls(callNo.result?.length);
+        // const requestOptions = {
+        //   method: "POST",
+        //   headers: myHeaders,
+        //   body: raw,
+        //   redirect: "follow",
+        // };
 
-        // total spent
-        let spentTotal = result.filter((res) => res.name == "Total Spent")[0];
-        if (spentTotal.result?.length > 0) {
-          let totalSpentSum;
-          totalSpentSum = spentTotal.result?.reduce(function (prev, current) {
-            return parseInt(prev + +current.sumCost);
-          }, 0);
-          setTotalSpent(totalSpentSum);
-        }
-
-        // Cost Per Provider
-        let costPerProvider = result.filter(
-          (res) => res.name == "Cost Per Provider"
-        )[0];
-        if (costPerProvider.result?.length > 0) {
-          let costProviderSum;
-          costProviderSum = costPerProvider.result?.reduce(function (
-            prev,
-            current
-          ) {
-            return parseInt(prev + +current.sumCost);
-          },
-          0);
-          setCostPerProvider(costProviderSum);
-        }
-
-        // average cost per call
-        let costAvg = result.filter(
-          (res) => res.name == "Average Call Cost"
-        )[0];
-        if (costAvg.result?.length > 0) {
-          let avgCostSum;
-          avgCostSum = costAvg.result?.reduce(function (prev, current) {
-            return parseInt(prev + +current.avgCost);
-          }, 0);
-          setAverageCost(avgCostSum);
-        }
-
-        // Number of Calls by Assistant
-        let assistantCalls = result.filter(
-          (res) => res.name == "Number of Calls by Assistant"
-        )[0];
-        setAssistantCalls(assistantCalls.result);
-
-        // assistants
-        let assistantsData = result.filter(
-          (res) => res.name == "Average Call Duration by Assistant"
-        )[0];
-        if (assistantsData.result?.length > 0) {
-          setAssistants(assistantsData.result);
-          assistantsData.result.map((data, index) => {
-            getAssistantName(data.assistantId, index, data.avgDuration);
-          });
-        }
-
-        // Number of Failed Calls
-        let failedCallsData = result.filter(
-          (res) => res.name == "Number of Failed Calls"
-        )[0];
-        setFailedCalls(failedCallsData.result);
-        if (failedCallsData.result?.length > 0) {
-          // set labels array
-          failedCallsData.result?.map((data) => {
-            if (!endCalllabels.find((item) => item === data.endedReason)) {
-              // search by id
-              endCalllabels.push(data.endedReason);
+        try {
+          let result = null;
+          const response = await fetch(
+            API_URL + "api/users/get-overview/" + userId,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
             }
-          });
-          setEndCalllabels(endCalllabels);
-          // set data for donut chart
-          endCalllabels.map((reason) => {
-            endCallData.push(
-              failedCallsData.result?.filter((d) => d.endedReason == reason)
-                .length
-            );
-          });
-          setEndCallData(endCallData);
-        }
-      })
+          );
 
-      .catch((error) => console.error(error));
-  };
+          result = await response.json();
+          if (response.ok) {
+            if (result) {
+              console.log(result);
+              // current balance
+              setCurrentBalance(Number(result.currentBalance).toFixed(3));
+
+              // total call minutes
+              setTotalCallMins(Number(result.totalCallminutes).toFixed(3));
+
+              // number of calls
+              setNoOfCalls(result.totalNumberOfCalls);
+
+              // total spent
+              setTotalSpent(Number(result.totalSpent).toFixed(3));
+
+              // Cost Per Provider
+              // let costPerProvider = result.filter(
+              //   (res) => res.name == "Cost Per Provider"
+              // )[0];
+              // if (costPerProvider.result?.length > 0) {
+              //   let costProviderSum;
+              //   costProviderSum = costPerProvider.result?.reduce(function (
+              //     prev,
+              //     current
+              //   ) {
+              //     return parseInt(prev + +current.sumCost);
+              //   },
+              //   0);
+              //   setCostPerProvider(costProviderSum);
+              // }
+
+              // average cost per call
+              setAverageCost(Number(result.averageCallCost).toFixed(3));
+
+              // Number of Calls by Assistant
+              let assistantCalls = result.filter(
+                (res) => res.name == "Number of Calls by Assistant"
+              )[0];
+              setAssistantCalls(assistantCalls.result);
+
+              // assistants
+              let assistantsData = result.filter(
+                (res) => res.name == "Average Call Duration by Assistant"
+              )[0];
+              if (assistantsData.result?.length > 0) {
+                setAssistants(assistantsData.result);
+                assistantsData.result.map((data, index) => {
+                  getAssistantName(data.assistantId, index, data.avgDuration);
+                });
+              }
+
+              // Number of Failed Calls
+              let failedCallsData = result.filter(
+                (res) => res.name == "Number of Failed Calls"
+              )[0];
+              setFailedCalls(failedCallsData.result);
+              if (failedCallsData.result?.length > 0) {
+                // set labels array
+                failedCallsData.result?.map((data) => {
+                  if (
+                    !endCalllabels.find((item) => item === data.endedReason)
+                  ) {
+                    // search by id
+                    endCalllabels.push(data.endedReason);
+                  }
+                });
+                setEndCalllabels(endCalllabels);
+                // set data for donut chart
+                endCalllabels.map((reason) => {
+                  endCallData.push(
+                    failedCallsData.result?.filter(
+                      (d) => d.endedReason == reason
+                    ).length
+                  );
+                });
+                setEndCallData(endCallData);
+              }
+            }
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      };
+
+      analytics();
+    }
+  }, [endCallData, endCalllabels, userId]);
 
   return (
     <>
       {/** ---------------------- Select Period Content ------------------------- */}
-      <DashboardTopBar updateDashboardPeriod={updateDashboardPeriod} />
+      {/* <DashboardTopBar updateDashboardPeriod={updateDashboardPeriod} /> */}
 
       {/** ---------------------- Different stats content 1 ------------------------- */}
       <div className="grid lg:grid-cols-4 mt-2 md:grid-cols-2 grid-cols-1 gap-6">
+        {" "}
+        {/*  */}
+        <DashboardStats
+          title="Current Balance"
+          value={`$${currentBalance}`}
+          Icon={MdAttachMoney}
+          description="↙ -92.50%"
+          colorIndex={0}
+        />
         <DashboardStats
           title="Total Call Minutes"
           value={totalCallMins}
@@ -491,13 +501,13 @@ function Dashboard() {
           description="↙ -92.50%"
           colorIndex={0}
         />
-        <DashboardStats
+        {/* <DashboardStats
           title="Number of Calls"
           value={noOfCalls}
           Icon={MdPhoneForwarded}
           description="↙ 83.33%"
           colorIndex={1}
-        />
+        /> */}
         <DashboardStats
           title="Total Spent"
           value={`$${totalSpent}`}
@@ -550,7 +560,7 @@ function Dashboard() {
               <p className="text-xs mt-0 mb-4 ">
                 Call aggregated by the reason of why the call ended.
               </p>
-              {/* <Doughnut options={options} data={reasonData} /> */}
+              <Doughnut options={options} data={reasonData} />
             </TitleCard>
             <TitleCard topMargin="mt-0">
               <p className="text-lg font-bold mt-0">
@@ -569,13 +579,13 @@ function Dashboard() {
 
       <div className="grid lg:grid-cols-1 mt-10 grid-cols-1 gap-6">
         {/* <AmountStats/> */}
-        <DashboardStats
+        {/*<DashboardStats
           title="Cost per Provider"
           value={`$${costPerProvider}`}
           Icon={"span"}
           description="↙ -92.50%"
           colorIndex={5}
-        />
+        />*/}
         {/* <PageStats /> */}
       </div>
     </>
