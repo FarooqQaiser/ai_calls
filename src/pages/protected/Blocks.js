@@ -6,7 +6,7 @@ const Blocks = () => {
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(setPageTitle({ title: "Blocks" }));
-  }, []);
+  }, [dispatch]);
   return <div>Blocks</div>;
 };
 

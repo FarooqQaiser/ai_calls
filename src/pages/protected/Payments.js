@@ -7,7 +7,7 @@ import AddFunds from "../../components/Payments/AddFunds";
 import { API_URL } from "../../store";
 import { toast } from "react-toastify";
 import ArrowPathIcon from "@heroicons/react/24/outline/ArrowPathIcon";
-import TitleCard from "../../components/Cards/TitleCard";
+// import TitleCard from "../../components/Cards/TitleCard";
 
 const Payments = () => {
   const dispatch = useDispatch();

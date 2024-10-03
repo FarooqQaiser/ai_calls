@@ -1,19 +1,16 @@
-import { useEffect } from 'react'
-import { useDispatch } from 'react-redux'
-import { setPageTitle } from '../../features/common/headerSlice'
-import Team from '../../features/settings/team'
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { setPageTitle } from "../../features/common/headerSlice";
+import Team from "../../features/settings/team";
 
-function InternalPage(){
-    const dispatch = useDispatch()
+function InternalPage() {
+  const dispatch = useDispatch();
 
-    useEffect(() => {
-        dispatch(setPageTitle({ title : "Team Members"}))
-      }, [])
+  useEffect(() => {
+    dispatch(setPageTitle({ title: "Team Members" }));
+  }, [dispatch]);
 
-
-    return(
-        <Team/>
-    )
+  return <Team />;
 }
 
-export default InternalPage
+export default InternalPage;

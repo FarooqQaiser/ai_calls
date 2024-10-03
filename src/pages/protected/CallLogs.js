@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { IoCopy } from "react-icons/io5";
 import { toast } from "react-toastify";
-import { DATA } from "../../components/Call Logs/CallLogData";
+// import { DATA } from "../../components/Call Logs/CallLogData";
 import { useDispatch } from "react-redux";
 import { setPageTitle } from "../../features/common/headerSlice";
-import { VAPI_API_URL } from "../../store";
+import {
+  API_URL,
+  // VAPI_API_URL
+} from "../../store";
 import CallLogsNoResult from "../../components/Call Logs/CallLogsNoResult";
 import { useNavigate } from "react-router-dom";
 import moment from "moment/moment";
@@ -15,6 +18,7 @@ const CallLogs = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [showCallLogsNoResult, setShowCallLogsNoResult] = useState(false);
+  const userId = JSON.parse(localStorage.getItem("user")).id;
 
   useEffect(() => {
     const getToken = localStorage.getItem("token");
@@ -44,35 +48,56 @@ const CallLogs = () => {
     }
   };
 
-  const getCallLogs = async () => {
-    let result = null;
-
-    try {
-      const options = {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer e39adb17-33cb-472b-87c2-97f7ee91139f",
-        },
-      };
-      const response = await fetch("https://api.vapi.ai/call", options);
-      result = await response.json();
-      if (response.ok) {
-        if (result) {
-          console.log("List of Call Logs: ", result);
-          setData(result);
-          setIsCallLogs(true);
-        } else {
-          setShowCallLogsNoResult(true);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
+    const getCallLogs = async () => {
+      let result = null;
+
+      try {
+        // const options = {
+        //   method: "GET",
+        //   headers: {
+        //     Authorization: "Bearer e39adb17-33cb-472b-87c2-97f7ee91139f",
+        //   },
+        // };
+        // const response = await fetch("https://api.vapi.ai/call", options);
+        // result = await response.json();
+        // if (response.ok) {
+        //   if (result) {
+        //     console.log("List of Call Logs: ", result);
+        //     setData(result);
+        //     setIsCallLogs(true);
+        //   } else {
+        //     setShowCallLogsNoResult(true);
+        //   }
+        // }
+
+        const response = await fetch(
+          API_URL + "api/users/get-users-call-logs/" + userId,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        result = await response.json();
+        console.log("List of Call Logs: ", result);
+        if (response.ok) {
+          if (result) {
+            setData(result.data);
+            setIsCallLogs(true);
+            setShowCallLogsNoResult(false);
+          } else {
+            setShowCallLogsNoResult(true);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
     getCallLogs();
-  }, []);
+  }, [userId]);
 
   const handleDuration = (item, index) => {
     const startedAt = moment(

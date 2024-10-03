@@ -6,7 +6,7 @@ const Squads = () => {
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(setPageTitle({ title: "Squads" }));
-  }, []);
+  }, [dispatch]);
   return <div>Squads</div>;
 };
 
